@@ -22,6 +22,7 @@
 #include "TSUnit.h"
 #include "TSOutfit.h"
 #include "TSDBJson.h"
+#include "TSItemEntry.h"
 
 #include <sol/sol.hpp>
 
@@ -31,7 +32,6 @@ class TSBattleground;
 class TSBattlegroundPlayer;
 class TSInstance;
 class TSPlayerSpell;
-class TSItemEntry;
 class TSGUID;
 
 struct TSMail;

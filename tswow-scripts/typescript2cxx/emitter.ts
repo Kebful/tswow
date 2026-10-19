@@ -1140,6 +1140,17 @@ export class Emitter {
         this.writer.writeString('__asm { int 3 }');
     }
 
+    private enumUnderlyingType(node: ts.EnumDeclaration): string {
+        const values = node.members.map(member => this.typeChecker.getConstantValue(member))
+            .filter((value): value is number => typeof value === 'number');
+        if (values.every(value => value >= -2147483648 && value <= 2147483647)) {
+            return '';
+        }
+        // Keep ordinary enums unchanged; allow positive 32-bit flag masks.
+        return values.every(value => value >= 0 && value <= 4294967295)
+            ? ' : unsigned int' : ' : long long';
+    }
+
     processEnumForwardDeclaration(node: ts.EnumDeclaration): void {
         this.scope.push(node);
         this.processEnumForwardDeclarationInternal(node);
@@ -1154,6 +1165,7 @@ export class Emitter {
 
         this.writer.writeString('enum struct ');
         this.processIdentifier(node.name);
+        this.writer.writeString(this.enumUnderlyingType(node));
         this.writer.EndOfStatement();
     }
 
@@ -1206,6 +1218,7 @@ export class Emitter {
 
         this.writer.writeString('enum struct ');
         this.processIdentifier(node.name);
+        this.writer.writeString(this.enumUnderlyingType(node));
         this.writer.writeString(' ');
         this.writer.BeginBlock();
 
@@ -4057,4 +4070,3 @@ export class Emitter {
         }
     }
 }
-

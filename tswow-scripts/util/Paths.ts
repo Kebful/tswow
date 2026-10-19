@@ -338,7 +338,7 @@ export function InstallPath(pathIn: string, tdb: string) {
                 snippets_example: file('snippets-example.ts'),
             }),
             adtcreator: dirn('adt-creator',{
-                adtcreator_exe: file('adtcreator.exe'),
+                adtcreator_exe: file(`adtcreator${isWindows()?'.exe':''}`),
             }),
             mpqbuilder: dir({
                 mpqbuilder_exe: file(`mpqbuilder${isWindows()?'.exe':''}`),

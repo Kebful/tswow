@@ -34,6 +34,7 @@ export namespace Config {
             description: '',
             dependencies: spaths.package_json.readJson({}).dependencies,
             devDependencies: spaths.package_json.readJson({}).devDependencies,
+            allowScripts: spaths.package_json.readJson({}).allowScripts,
             scripts: {
                   start:
                       `node start`

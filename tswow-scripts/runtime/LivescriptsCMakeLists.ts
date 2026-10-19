@@ -79,7 +79,7 @@ target_precompile_headers(${buildModule} PUBLIC \${headers})
 ${(()=>{
     switch(emu) {
         case 'trinitycore':
-            return `target_compile_definitions(${buildModule} PUBLIC TRINITY=1)`
+            return `target_compile_definitions(${buildModule} PUBLIC TRINITY=1 SOL_NO_LUA_HPP=1)`
         default:
             return ''
     }

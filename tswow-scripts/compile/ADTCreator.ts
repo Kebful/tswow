@@ -10,7 +10,7 @@ export namespace ADTCreator {
     export async function create(cmake: string) {
         if(isWindows()) {
             wsys.exec(`${cmake} `
-                + ` -S "${spaths.misc.adtcreator}" `
+                + ` -S "${spaths.misc.adtcreator.get()}" `
                 + ` -B "${bpaths.adtcreator.get()}"`, 'inherit');
             wsys.exec(`${cmake}`
                 + ` --build "${bpaths.adtcreator.get()}"`
@@ -18,15 +18,12 @@ export namespace ADTCreator {
             bpaths.adtcreator.Release.adt_creator_exe
                 .copy(ipaths.bin.adtcreator.adtcreator_exe)
         } else {
-            bpaths.adtcreator.mkdir();
-            const relativeSource = bpaths.adtcreator.relativeFrom(spaths.misc.adtcreator.get())
-            await wsys.inDirectory(bpaths.adtcreator.get(),
-            ()=>{
-                wsys.exec(
-                    `${cmake} "${relativeSource}"`
-                    ,  'inherit');
-                wsys.exec(`make`,'inherit');
-            })
+            wsys.exec(`${cmake}`
+                + ` -S "${spaths.misc.adtcreator.get()}"`
+                + ` -B "${bpaths.adtcreator.get()}"`
+                + ` -DCMAKE_BUILD_TYPE=Release`, 'inherit');
+            wsys.exec(`${cmake} --build "${bpaths.adtcreator.get()}"`, 'inherit');
+            wfs.copy(bpaths.adtcreator.join('adt-creator'), ipaths.bin.adtcreator.adtcreator_exe);
         }
 
         await DownloadFile(

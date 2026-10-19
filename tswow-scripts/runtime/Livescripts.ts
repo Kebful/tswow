@@ -15,6 +15,7 @@ import { BuildCommand, CleanCommand, ListCommand } from "./CommandActions";
 import { Datascripts } from "./Datascripts";
 import { Dataset } from "./Dataset";
 import { Identifier } from "./Identifiers";
+import { getLivescriptBuildJobs } from "./LivescriptBuildJobs";
 import { getLivescriptCMakeLists } from "./LivescriptsCMakeLists";
 import { Module, ModuleEndpoint } from "./Modules";
 import { NodeExecutable } from "./Node";
@@ -57,9 +58,9 @@ const temp_config = (dataset: Dataset) => ({
     'esModuleInterop': true,
     'skipLibCheck': true,
     'forceConsistentCasingInFileNames': true
-},
+    },
     'include': ['./shared','./livescripts'],
-    'exclude': ['./livescripts/build/lib']
+    'exclude': ['./livescripts/build/*/lib', './livescripts/build/*/cpp']
 });
 
 export class LiveScriptsConfig extends ConfigFile {
@@ -231,6 +232,7 @@ export class Livescripts {
     }
 
     private buildCxx(dataset: Dataset, buildType: BuildType, args: string[] = []) {
+        const buildJobs = getLivescriptBuildJobs();
         let tracyArg = args.find(x=>x.startsWith('tracy'))
 
         this.mod.path.livescript_tsconfig_temp.writeJson(temp_config(dataset))
@@ -273,8 +275,11 @@ export class Livescripts {
                 }
             });
 
-        builddir.cpp.cmakelists_txt
-            .write(getLivescriptCMakeLists(dataset.config.EmulatorCore,buildType,this.mod.fullName))
+        const cmakeFile = builddir.cpp.cmakelists_txt;
+        const cmakeContents = getLivescriptCMakeLists(dataset.config.EmulatorCore,buildType,this.mod.fullName);
+        if (!cmakeFile.exists() || cmakeFile.readString() !== cmakeContents) {
+            cmakeFile.write(cmakeContents);
+        }
 
             const cmake_generate =
             (isWindows()
@@ -287,20 +292,20 @@ export class Livescripts {
             term.log(this.logName(),`Generating CMake project...`)
             wsys.exec(cmake_generate, !process.argv.includes('--silent')?'inherit':'ignore');
         } catch(err) {
-            term.error(this.logName(),`Failed to generate CMake files, please report this error`);
+            throw new Error(`Failed to generate CMake files for ${this.mod.fullName}`);
         }
         const cmake_build =
             (isWindows()
                 ? `"bin/cmake/bin/cmake.exe"`
                 : `cmake`)
             + ` --build ${builddir.lib.abs()}`
-            + ` --config ${buildType}`;
+            + ` --config ${buildType} --parallel ${buildJobs}`;
 
         try {
-            term.log(this.logName(),`Compiling C++ binary...`)
+            term.log(this.logName(),`Compiling C++ binary with ${buildJobs} parallel jobs...`)
             wsys.exec(cmake_build,!process.argv.includes('--silent') ? 'inherit' : 'ignore')
         } catch (error) {
-            term.error(this.logName(),`Failed to compile library, please report this error`);
+            throw new Error(`Failed to compile library for ${this.mod.fullName}`);
         }
 
         let lib = builddir.built_libs.pick(buildType).library

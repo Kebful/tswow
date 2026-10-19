@@ -82,10 +82,6 @@ export class MapADT<T extends Map> extends CellSystem<T> {
     }
 
     add(mod: string, blobs: [minx: number, miny: number, maxx: number, maxy: number, teleportName?: string][]) {
-        if(!isWindows()) {
-            console.log(`ADT generation is not yet implemented for linux, skipping adt generation.`)
-            return this.owner;
-        }
         mod = mod.split('.').join(path.sep)
         if(this.owner.Directory.get().split(/[\n \r\t]/).join('').length === 0) {
             throw new Error(
@@ -128,13 +124,11 @@ export class MapADT<T extends Map> extends CellSystem<T> {
             }
 
             if(missing) {
-                child_process.execSync(
-                    `"${path.join('bin','adt-creator','adtcreator.exe')}"`
-                    + ` ${path.join('bin','source.adt')}`
-                    + ` ${mapdir}`
-                    + ` ${this.owner.Directory.get()}`
-                    + ` ${minx} ${miny} ${maxx} ${maxy}`
-                    , {stdio:'inherit'});
+                child_process.execFileSync(
+                    path.join('bin', 'adt-creator', isWindows() ? 'adtcreator.exe' : 'adtcreator'),
+                    [path.join('bin', 'source.adt'), mapdir, this.owner.Directory.get(),
+                        String(minx), String(miny), String(maxx), String(maxy)],
+                    {stdio: 'inherit'});
             }
         }
         return this.owner;

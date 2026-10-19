@@ -15,6 +15,9 @@ target_include_directories(blpconverter PUBLIC
 )
 
 if(UNIX)
+	# The bundled zlib includes unistd.h only when this feature is enabled.
+	# Provide POSIX declarations (read, write, close, lseek) to modern compilers.
+	target_compile_definitions(blpconverter PRIVATE Z_HAVE_UNISTD_H=1)
 	set(THREADS_PREFER_PTHREAD_FLAG ON)
 	find_package(Threads REQUIRED)
 	target_link_libraries(blpconverter PRIVATE Threads::Threads)

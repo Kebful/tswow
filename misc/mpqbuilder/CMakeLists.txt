@@ -11,12 +11,20 @@ FetchContent_Declare(
   GIT_REPOSITORY https://github.com/ladislav-zezula/StormLib.git
   GIT_TAG 60c2dd0fa16d3506722e25fee9b6fa4082b0c1e5
 )
-FetchContent_GetProperties (storm)
-if (NOT storm_POPULATED)
-  message (STATUS "Installing StormLib...")
-  FetchContent_Populate (storm)
-endif()
-add_subdirectory (${storm_SOURCE_DIR} ${storm_BINARY_DIR} EXCLUDE_FROM_ALL)
+# The pinned StormLib requests CMake 2.8 policies, unsupported by CMake 4.
+# Keep its compatibility floor local rather than changing the caller's cache.
+function(tswow_make_storm_available)
+  if(CMAKE_VERSION VERSION_GREATER_EQUAL "4.0" AND
+      (NOT DEFINED CMAKE_POLICY_VERSION_MINIMUM OR
+       CMAKE_POLICY_VERSION_MINIMUM VERSION_LESS "3.10"))
+    set(CMAKE_POLICY_VERSION_MINIMUM 3.10)
+  endif()
+  FetchContent_MakeAvailable(storm)
+  # Preserve EXCLUDE_FROM_ALL with our minimum supported CMake 3.22, before
+  # FetchContent_Declare gained its EXCLUDE_FROM_ALL option in CMake 3.28.
+  set_property(DIRECTORY "${storm_SOURCE_DIR}" PROPERTY EXCLUDE_FROM_ALL TRUE)
+endfunction()
+tswow_make_storm_available()
 set (storm_warning_disable_flags "")
 TARGET_LINK_LIBRARIES(mpqbuilder
   Boost::filesystem
