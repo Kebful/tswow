@@ -114,7 +114,7 @@ export class NodeConfigClass extends ConfigFile {
 
     @Property({
       name: 'Database.HostedPort'
-    , description: 'What port to host MySQL on, if any. Windows-only'
+    , description: 'Preferred port for a TSWoW-managed MySQL server. Set to 0 to use an external server.'
     , examples: [[3306,''],[0,'Will not host a MySQL process']]
     })
     DatabaseHostedPort!: number
@@ -158,6 +158,13 @@ export class NodeConfigClass extends ConfigFile {
     })
     DatabaseCharacters!: string
 
+    /**
+     * Runtime override used after a managed local server has chosen an
+     * installation-specific port or host.
+     */
+    DatabaseResolvedHost?: string
+    DatabaseResolvedPort?: number
+
     DatabaseString(type: DatabaseType, name?: string) {
         let settings = this.DatabaseSettings(type, name);
         return `${settings.host};${settings.port};${settings.user};${settings.password};${settings.database}`
@@ -165,16 +172,24 @@ export class NodeConfigClass extends ConfigFile {
 
     DatabaseSettings(type: DatabaseType, name?: string) {
         const makeSettings = (str: string, suffix?: string)=>{
-            const [host,port,user,password] = str.split(';')
+            const [configuredHost,configuredPort,user,password] = str.split(';')
             let prefix = this.DatabasePrefix.length > 0
                 ? `${this.DatabasePrefix}.`
                 : ''
             name = name
                 ? `${name}.`
                 : ''
+            const port = parseInt(configuredPort)
+            const isManagedLocal =
+                   (configuredHost === 'localhost' || configuredHost === '127.0.0.1')
+                && port === this.DatabaseHostedPort
             return {
-                  host
-                , port : parseInt(port)
+                  host: isManagedLocal && this.DatabaseResolvedHost
+                    ? this.DatabaseResolvedHost
+                    : configuredHost
+                , port: isManagedLocal && this.DatabaseResolvedPort
+                    ? this.DatabaseResolvedPort
+                    : port
                 , user
                 , password
                 , database:`${prefix}${name}${suffix}`

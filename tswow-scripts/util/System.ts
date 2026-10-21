@@ -116,6 +116,35 @@ export namespace wsys {
     }
 
     /**
+     * Returns whether a command is available on the system PATH.
+     */
+    export function hasCommand(command: string): boolean {
+        try {
+            child_process.execSync(`command -v ${command}`, { stdio: 'ignore' });
+            return true;
+        } catch (error) {
+            return false;
+        }
+    }
+
+    /**
+     * Resolves the first available executable from a list of candidate names.
+     */
+    export function resolveExe(candidates: string[]): string {
+        for (const candidate of candidates) {
+            try {
+                const found = exec(`command -v ${candidate}`, 'pipe').trim();
+                if (found.length > 0) {
+                    return found;
+                }
+            } catch (error) {
+                // Try the next candidate.
+            }
+        }
+        return candidates[candidates.length - 1];
+    }
+
+    /**
      * Executes a child process in a specific working directory.
      * @param dirname Working directory to run the child process in
      * @param program Command to execute

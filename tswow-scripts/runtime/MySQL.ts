@@ -15,8 +15,9 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 import * as mysql_lib from 'mysql2';
+import * as fs from 'fs';
+import * as net from 'net';
 import path from 'path';
-import { start } from 'repl';
 import { commands } from '../util/Commands';
 import { EmulatorCore } from '../util/EmulatorCore';
 import { wfs } from '../util/FileSystem';
@@ -189,19 +190,247 @@ export class Connection {
  */
 export namespace mysql {
     const mysqlprocess: Process = new Process('mysql');
+    const managesLinuxDatabase = () => process.platform === 'linux';
+
+    function managedPaths() {
+        const data = ipaths.coredata.database.abs().get();
+        const runtime = path.dirname(data);
+        return {
+            data,
+            socket: path.join(runtime, 'mysql.sock'),
+            pid: path.join(runtime, 'mysql.pid'),
+            port: path.join(runtime, 'mysql.port'),
+        };
+    }
+
+    function readNumber(file: string) {
+        try {
+            const value = Number(wfs.read(file).trim());
+            return Number.isSafeInteger(value) && value > 0 ? value : undefined;
+        } catch (error) {
+            return undefined;
+        }
+    }
+
+    function isPortAvailable(port: number) {
+        return new Promise<boolean>((resolve) => {
+            const server = net.createServer();
+            server.unref();
+            server.once('error', () => resolve(false));
+            server.listen({ host: '127.0.0.1', port }, () => {
+                server.close(() => resolve(true));
+            });
+        });
+    }
+
+    async function findAvailablePort(start: number) {
+        for (let port = start; port < start + 100; ++port) {
+            if (await isPortAvailable(port)) {
+                return port;
+            }
+        }
+        throw new Error(`Could not find a free MariaDB port starting at ${start}`);
+    }
+
+    function runningManagedPort() {
+        const paths = managedPaths();
+        const pid = readNumber(paths.pid);
+        const port = readNumber(paths.port);
+        if (!pid || !port) {
+            return undefined;
+        }
+
+        try {
+            process.kill(pid, 0);
+        } catch (error) {
+            return undefined;
+        }
+
+        try {
+            const command = fs.readFileSync(`/proc/${pid}/cmdline`, 'utf-8')
+                .split('\0').join(' ');
+            if (!command.includes(paths.data)) {
+                return undefined;
+            }
+        } catch (error) {
+            return undefined;
+        }
+
+        return port;
+    }
+
+    export function clientExecutable() {
+        if (NodeConfig.MySQLExecutable.length > 0) {
+            return NodeConfig.MySQLExecutable;
+        }
+        return isWindows()
+            ? ipaths.bin.mysql.mysql_exe.abs().get()
+            : wsys.resolveExe(['mariadb', 'mysql']);
+    }
 
     export function dump(connection: Connection, outputFile: string) {
+        if (managesLinuxDatabase() && hasOwnProcess()) {
+            const paths = managedPaths();
+            wsys.exec(
+                `"${wsys.resolveExe(['mariadb-dump', 'mysqldump'])}"`
+                + ` --socket="${paths.socket}"`
+                + ` -u root ${connection.cfg.database}`
+                + ` > ${wfs.absPath(outputFile)}`);
+            return;
+        }
+
         wsys.exec(
-            `"${ipaths.bin.mysql.mysqldump_exe.get()}"`
+            `"${isWindows()
+                ? ipaths.bin.mysql.mysqldump_exe.get()
+                : wsys.resolveExe(['mariadb-dump', 'mysqldump'])}"`
             + ` --port ${connection.cfg.port}`
             + ` --host ${connection.cfg.host}`
             + ` -u root ${connection.cfg.database}`
             + ` > ${wfs.absPath(outputFile)}`)
     }
 
+    function localDatabaseSettings() {
+        return [
+            NodeConfig.DatabaseSettings('auth'),
+            NodeConfig.DatabaseSettings('characters'),
+            NodeConfig.DatabaseSettings('world'),
+            NodeConfig.DatabaseSettings('world_source'),
+        ].filter(x=>
+            (x.host === 'localhost' || x.host === '127.0.0.1')
+            && x.port === NodeConfig.DatabaseResolvedPort
+        )
+    }
+
+    function databaseUsers(settings: DatabaseSettings[]) {
+        if (settings.length === 0) {
+            throw new Error(
+                  `Node.conf missing a local database on port ${NodeConfig.DatabaseResolvedPort}.`
+                + ` If you changed Database.HostedPort in node.conf,`
+                + ` check the Database.* connection strings as well`);
+        }
+
+        const users: {[key: string]: string} = {}
+        settings.forEach(x=>{
+            if(users[x.user] !== undefined && users[x.user] !== x.password) {
+                throw new Error(`Multiple passwords defined for MySQL user ${x.user}`)
+            }
+            users[x.user] = x.password
+        })
+
+        const entries = Object.entries(users);
+        if (entries.length === 0) {
+            throw new Error(`No database users found, check your Node.conf`);
+        }
+        return entries;
+    }
+
+    function startupSql(users: [string, string][]) {
+        const sql: string[] = [];
+        for (const [user, pass] of users) {
+            const quotedUser = mysql_lib.escape(user);
+            const quotedPass = mysql_lib.escape(pass);
+            for (const host of ['localhost', '127.0.0.1']) {
+                sql.push(
+                      `CREATE USER IF NOT EXISTS ${quotedUser}@${mysql_lib.escape(host)}`
+                    + ` IDENTIFIED BY ${quotedPass};`
+                );
+                sql.push(
+                      `ALTER USER ${quotedUser}@${mysql_lib.escape(host)}`
+                    + ` IDENTIFIED BY ${quotedPass};`
+                );
+                sql.push(
+                      `GRANT ALL ON *.* TO ${quotedUser}@${mysql_lib.escape(host)};`
+                );
+            }
+        }
+        sql.push('FLUSH PRIVILEGES;');
+        return sql.join('\n');
+    }
+
+    async function startManagedLinux(port: number) {
+        const paths = managedPaths();
+        IfMissingDataDir: {
+            if (ipaths.coredata.database.join('mysql').exists()) {
+                break IfMissingDataDir;
+            }
+
+            term.log('mysql', `Initializing MariaDB data directory at ${paths.data}`);
+            const installer = wsys.resolveExe(['mariadb-install-db', 'mysql_install_db']);
+            wsys.exec(
+                  `"${installer}" --no-defaults`
+                + ` --datadir="${paths.data}"`
+                + ` --auth-root-authentication-method=normal`
+                + ` --skip-test-db`,
+                'inherit');
+        }
+
+        const users = databaseUsers(localDatabaseSettings());
+        const startup = path.dirname(paths.data) + path.sep + 'mysql-startup.sql';
+        wfs.write(startup, startupSql(users));
+        wfs.write(paths.port, String(port));
+
+        const server = wsys.resolveExe(['mariadbd', 'mysqld']);
+        const started = mysqlprocess
+            .showOutput(process.argv.includes('logmysql'))
+            .start(server, [
+                '--no-defaults',
+                `--datadir=${paths.data}`,
+                `--port=${port}`,
+                '--bind-address=127.0.0.1',
+                `--socket=${paths.socket}`,
+                `--pid-file=${paths.pid}`,
+                `--init-file=${startup}`,
+                '--skip-name-resolve',
+                '--character-set-server=utf8mb4',
+                '--collation-server=utf8mb4_unicode_ci',
+                '--max-allowed-packet=1G',
+                '--wait-timeout=2147483',
+                '--console',
+            ]);
+
+        const val = await Promise.race([
+            mysqlprocess.waitForMessage('ready for connections', true),
+            mysqlprocess.waitForMessage('Can\'t start server', true),
+            started.then(()=>'MariaDB exited before becoming ready'),
+            wsys.sleep(30000).then(()=>'Timed out waiting for MariaDB'),
+        ]);
+
+        if (!val.includes('ready for connections')) {
+            await disconnect();
+            wfs.remove(startup);
+            throw new Error(`Failed to start MariaDB: ${val}`);
+        }
+
+        wfs.remove(startup);
+        term.success('mysql', `MariaDB started on 127.0.0.1:${port} with data at ${paths.data}`);
+    }
+
     export async function startProcess() {
         term.log('mysql','Starting mysql...');
         ipaths.coredata.mkdir()
+        if (isWindows()) {
+            await startBundledWindows();
+            return;
+        }
+
+        if (!managesLinuxDatabase()) {
+            return;
+        }
+
+        NodeConfig.DatabaseResolvedHost = '127.0.0.1';
+        const existing = runningManagedPort();
+        const port = existing ?? await findAvailablePort(NodeConfig.DatabaseHostedPort);
+        NodeConfig.DatabaseResolvedPort = port;
+
+        if (existing) {
+            term.success('mysql', `Using existing per-installation MariaDB on 127.0.0.1:${existing}`);
+            return;
+        }
+
+        await startManagedLinux(port);
+    }
+
+    async function startBundledWindows() {
         if(!ipaths.coredata.database.exists()) {
             term.log('mysql',"No mysql database found, creating it...");
             try {
@@ -229,26 +458,7 @@ export namespace mysql {
                 && (x.host === 'localhost' || x.host === '127.0.0.1')
         )
 
-        if(settings.length === 0) {
-            throw new Error(
-                  `Node.conf missing local database on port ${NodeConfig.DatabaseHostedPort}.`
-                + ` If you changed Database.HostedPort In node.conf,`
-                + `check that you have also changed any or all Database.* fields as well`);
-        }
-
-        const users: {[key: string]: /*password:*/ string} = {}
-        settings.forEach(x=>{
-            if(users[x.user] !== undefined && users[x.user] !== x.password) {
-                throw new Error(`Multiple passwords defined for MySQL user ${x.user}`)
-            }
-            users[x.user] = x.password
-        })
-
-        if(Object.entries(users).length === 0) {
-            throw new Error(`No database users found, check your Node.conf`)
-        }
-
-        const [user,pass] = Object.entries(users).find(()=>true);
+        const [user,pass] = databaseUsers(settings)[0];
 
         wfs.write(ipaths.bin.mysql_startup.get(),
               `CREATE USER IF NOT EXISTS`
@@ -294,8 +504,22 @@ export namespace mysql {
      * Returns whether this instance of TSWoW should manage its own MySQL process.
      */
     export function hasOwnProcess() {
-        return isWindows()
-            && NodeConfig.DatabaseHostedPort !== 0;
+        if (NodeConfig.DatabaseHostedPort === 0) {
+            return false;
+        }
+        if (isWindows()) {
+            return true;
+        }
+        if (!managesLinuxDatabase()) {
+            return false;
+        }
+        if (!wsys.hasCommand('mariadbd') && !wsys.hasCommand('mysqld')) {
+            throw new Error(
+                  `Database.HostedPort is set to ${NodeConfig.DatabaseHostedPort},`
+                + ` but no MariaDB/MySQL server executable was found.`
+                + ` Install MariaDB or set Database.HostedPort = 0 to use an external server.`);
+        }
+        return true;
     }
 
     /**
@@ -357,11 +581,7 @@ export namespace mysql {
         term.log('mysql',`Rebuilding database ${con.name()}`);
         await con.clean();
 
-        const mysqlCommand = mysql.hasOwnProcess() ?
-            `"${ipaths.bin.mysql.mysql_exe.get()}"` :
-                NodeConfig.MySQLExecutable != '' ?
-            `"${NodeConfig.MySQLExecutable}"`:
-                `mysql`;
+        const mysqlCommand = `"${clientExecutable()}"`;
 
         await wsys.execAsync(
               `${mysqlCommand}`
@@ -416,7 +636,7 @@ export namespace mysql {
 
     export async function disconnect() {
         if(mysqlprocess.isRunning()) {
-            mysqlprocess.stop();
+            await mysqlprocess.stop();
         }
     }
 
@@ -477,7 +697,7 @@ export namespace mysql {
                 , 'Starts/Restarts the MySQL process and all connections'
                 , async() => {
 
-                await start();
+                await startProcess();
             });
 
             mysqlC.addCommand(
