@@ -180,15 +180,24 @@ export class NodeConfigClass extends ConfigFile {
                 ? `${name}.`
                 : ''
             const port = parseInt(configuredPort)
+            const resolvedHost = this.DatabaseResolvedHost
+                ?? process.env.TSWOW_DATABASE_HOST
+            const environmentPort = parseInt(
+                process.env.TSWOW_DATABASE_PORT || ''
+            )
+            const resolvedPort = this.DatabaseResolvedPort
+                ?? (Number.isSafeInteger(environmentPort)
+                    ? environmentPort
+                    : undefined)
             const isManagedLocal =
                    (configuredHost === 'localhost' || configuredHost === '127.0.0.1')
                 && port === this.DatabaseHostedPort
             return {
-                  host: isManagedLocal && this.DatabaseResolvedHost
-                    ? this.DatabaseResolvedHost
+                  host: isManagedLocal && resolvedHost
+                    ? resolvedHost
                     : configuredHost
-                , port: isManagedLocal && this.DatabaseResolvedPort
-                    ? this.DatabaseResolvedPort
+                , port: isManagedLocal && resolvedPort
+                    ? resolvedPort
                     : port
                 , user
                 , password

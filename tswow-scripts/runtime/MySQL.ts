@@ -421,6 +421,8 @@ export namespace mysql {
         const existing = runningManagedPort();
         const port = existing ?? await findAvailablePort(NodeConfig.DatabaseHostedPort);
         NodeConfig.DatabaseResolvedPort = port;
+        process.env.TSWOW_DATABASE_HOST = NodeConfig.DatabaseResolvedHost;
+        process.env.TSWOW_DATABASE_PORT = String(port);
 
         if (existing) {
             term.success('mysql', `Using existing per-installation MariaDB on 127.0.0.1:${existing}`);
