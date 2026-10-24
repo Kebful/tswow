@@ -59,7 +59,7 @@ finish('class-has-runes', () => {
     })
     
     LUAXML.file('Interface/FrameXML/RuneFrame.lua')
-        .replace('	if ( class ~= "DEATHKNIGHT" ) then'
+        .replace(/^\tif \( class (?:~=|==) "DEATHKNIGHT" \) then$/
         , `	if (not (${Object.entries(perClass).map(([cls,races])=>`(class_id == "${cls}" and (${races.map(race=>`race_id == "${race}"`).join(' or ')}))`).join(' or ')})) then`
         )
 });
