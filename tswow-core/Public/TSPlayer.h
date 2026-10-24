@@ -50,6 +50,11 @@ public:
 	bool HasQuest(uint32 quest);
 	bool HasSkill(uint32 skill);
 	bool HasSpell(uint32 id);
+	TSNumber<uint8> RequestClassSwitch(uint16 protocolVersion, uint8 requestType, uint8 classId, uint64 revision);
+	bool CompleteClassSwitchSpell(uint32 spellId);
+	bool IsClassSwitchSpell(uint32 spellId);
+	bool EnsureClassSwitchSpellKnown();
+	TSNumber<uint32> GetClassSwitchSpellId();
 	TSDictionary<TSNumber<uint32>, TSPlayerSpell> GetSpellMap();
 	bool HasAtLoginFlag(uint32 flag);
 	bool HasQuestForGO(int32 entry);

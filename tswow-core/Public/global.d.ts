@@ -452,6 +452,11 @@ declare interface TSPlayer extends TSUnit, TSDBJsonProvider {
      * @return bool hasSpell
      */
     HasSpell(id : uint32) : bool
+    RequestClassSwitch(protocolVersion: uint16, requestType: uint8, classId: uint8, revision: uint64): TSNumber<uint8>
+    CompleteClassSwitchSpell(spellId: uint32): bool
+    IsClassSwitchSpell(spellId: uint32): bool
+    EnsureClassSwitchSpellKnown(): bool
+    GetClassSwitchSpellId(): TSNumber<uint32>
 
     /**
      * Returns all spells known by this player
@@ -8033,6 +8038,7 @@ declare namespace _hidden {
         OnEmote(callback: (player : TSPlayer,emote : uint32)=>void);
         OnTextEmote(callback: (player : TSPlayer,textEmote : uint32,emoteNum : uint32,guid : uint64)=>void);
         OnSpellCast(callback: (player : TSPlayer,spell : TSSpell,skipCheck : bool)=>void);
+        OnSpellCastSucceeded(callback: (player : TSPlayer,spell : TSSpell,skipCheck : bool)=>void);
         OnLogin(callback: (player : TSPlayer,firstLogin : bool)=>void);
         OnReload(callback: (player : TSPlayer,firstLogin : bool)=>void);
         OnLogout(callback: (player : TSPlayer)=>void);

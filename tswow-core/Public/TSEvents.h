@@ -164,6 +164,7 @@ struct TSEvents
          EVENT(OnEmote, TSPlayer, TSNumber<uint32>)
          EVENT(OnTextEmote, TSPlayer, TSNumber<uint32>, TSNumber<uint32>, TSNumber<uint64>)
          EVENT(OnSpellCast, TSPlayer, TSSpell, bool)
+         EVENT(OnSpellCastSucceeded, TSPlayer, TSSpell, bool)
          EVENT(OnLogin, TSPlayer, bool)
          EVENT_FN(OnReload, ReloadPlayer, TSPlayer, bool)
          EVENT(OnLogout, TSPlayer)

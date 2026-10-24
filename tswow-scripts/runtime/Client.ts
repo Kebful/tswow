@@ -132,10 +132,12 @@ export class Client {
         for(let i=0;i<count;++i) {
             term.log('client',`Starting client for dataset ${this.dataset.name}`)
             let process = new Process('client').showOutput(false);
+            const executable = this.path.wow_client_64
+            term.debug('client', `Using client executable ${executable.get()}`)
             if(isWindows()) {
-                process.start(this.path.wow_exe.get())
+                process.start(executable.get())
             } else {
-                process.start('wine',[this.path.wow_exe.get()])
+                process.start('wine',[executable.get()])
             }
             processes.push(process);
             sleep(200)

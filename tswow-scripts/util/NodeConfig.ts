@@ -1,3 +1,5 @@
+import * as fs from 'fs';
+import path from 'path';
 import { BuildType } from "../util/BuildType";
 import { ConfigFile, Property, Section } from "../util/ConfigFile";
 
@@ -185,10 +187,24 @@ export class NodeConfigClass extends ConfigFile {
             const environmentPort = parseInt(
                 process.env.TSWOW_DATABASE_PORT || ''
             )
+            let runtimePort: number|undefined = undefined
+            try {
+                const portFile = path.join(
+                    path.dirname(this.filename),
+                    'coredata',
+                    'mysql.port'
+                )
+                const filePort = Number(fs.readFileSync(portFile, 'utf-8').trim())
+                if (Number.isSafeInteger(filePort) && filePort > 0) {
+                    runtimePort = filePort
+                }
+            } catch (error) {
+                // No managed database is running.
+            }
             const resolvedPort = this.DatabaseResolvedPort
                 ?? (Number.isSafeInteger(environmentPort)
                     ? environmentPort
-                    : undefined)
+                    : runtimePort)
             const isManagedLocal =
                    (configuredHost === 'localhost' || configuredHost === '127.0.0.1')
                 && port === this.DatabaseHostedPort

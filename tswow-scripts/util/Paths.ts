@@ -235,6 +235,8 @@ export function ClientPath(pathIn: string, devPatch: string) {
     return generateTree(pathIn,dir({
         /** The Wow.exe used to start the game */
         wow_exe: file('Wow.exe'),
+        /** The x64 wowdecomp client, preferred when present */
+        wow_client_64: file('WowClient64.exe'),
         /** The Wow.exe without any patches applied */
         wow_exe_clean: file('Wow.exe.clean'),
         Data: dir({

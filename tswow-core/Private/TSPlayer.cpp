@@ -152,6 +152,32 @@ bool TSPlayer::HasSpell(uint32 id)
     return player->HasSpell(id);
 }
 
+TSNumber<uint8> TSPlayer::RequestClassSwitch(uint16 protocolVersion, uint8 requestType,
+    uint8 classId, uint64 revision)
+{
+    return player->RequestClassSwitch(protocolVersion, requestType, classId, revision);
+}
+
+bool TSPlayer::CompleteClassSwitchSpell(uint32 spellId)
+{
+    return player->HandleClassSwitchSpellCast(spellId);
+}
+
+bool TSPlayer::IsClassSwitchSpell(uint32 spellId)
+{
+    return player->IsClassSwitchSpell(spellId);
+}
+
+bool TSPlayer::EnsureClassSwitchSpellKnown()
+{
+    return player->EnsureClassSwitchSpellKnown();
+}
+
+TSNumber<uint32> TSPlayer::GetClassSwitchSpellId()
+{
+    return player->GetClassSwitchSpellId();
+}
+
 /**
  * Returns true if [Player] has specified login flag
  *

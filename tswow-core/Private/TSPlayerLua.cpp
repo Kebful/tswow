@@ -35,6 +35,11 @@ void TSLua::load_player_methods(sol::state& state)
     LUA_FIELD(ts_player, TSPlayer, HasQuest);
     LUA_FIELD(ts_player, TSPlayer, HasSkill);
     LUA_FIELD(ts_player, TSPlayer, HasSpell);
+    LUA_FIELD(ts_player, TSPlayer, RequestClassSwitch);
+    LUA_FIELD(ts_player, TSPlayer, CompleteClassSwitchSpell);
+    LUA_FIELD(ts_player, TSPlayer, IsClassSwitchSpell);
+    LUA_FIELD(ts_player, TSPlayer, EnsureClassSwitchSpellKnown);
+    LUA_FIELD(ts_player, TSPlayer, GetClassSwitchSpellId);
     LUA_FIELD(ts_player, TSPlayer, HasAtLoginFlag);
     LUA_FIELD(ts_player, TSPlayer, HasQuestForGO);
     LUA_FIELD(ts_player, TSPlayer, HasTitle);

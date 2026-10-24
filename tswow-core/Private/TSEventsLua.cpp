@@ -59,6 +59,7 @@ void TSLua::load_events(sol::state& state)
     LUA_HANDLE(player_events, PlayerEvents, OnEmote);
     LUA_HANDLE(player_events, PlayerEvents, OnTextEmote);
     LUA_HANDLE(player_events, PlayerEvents, OnSpellCast);
+    LUA_HANDLE(player_events, PlayerEvents, OnSpellCastSucceeded);
     LUA_HANDLE(player_events, PlayerEvents, OnLogin);
     LUA_HANDLE(player_events, PlayerEvents, OnReload);
     LUA_HANDLE(player_events, PlayerEvents, OnLogout);

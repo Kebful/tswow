@@ -161,6 +161,7 @@ public:
 #endif
     void OnTextEmote(Player* player,uint32 textEmote,uint32 emoteNum,ObjectGuid guid) FIRE(Player,OnTextEmote,TSPlayer(player),textEmote,emoteNum,guid.GetRawValue())
     void OnSpellCast(Player* player,Spell* spell,bool skipCheck) FIRE(Player,OnSpellCast,TSPlayer(player),TSSpell(spell),skipCheck)
+    void OnSpellCastSucceeded(Player* player,Spell* spell,bool skipCheck) FIRE(Player,OnSpellCastSucceeded,TSPlayer(player),TSSpell(spell),skipCheck)
 #if TRINITY
     void OnLogin(Player* player,bool firstLogin) FIRE(Player,OnLogin,TSPlayer(player),firstLogin)
 #endif
