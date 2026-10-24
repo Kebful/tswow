@@ -4,6 +4,10 @@ import { DBC } from "../../../DBCFiles";
 import { LUAXML } from "../../../luaxml/LUAXML";
 import { SQL } from "../../../SQLFiles";
 import { ClassRacePair } from "./ClassRaces";
+import {
+    BuildRuneClassCondition,
+    FindRuneClassCondition,
+} from "./ClassRaceRuneFrame";
 
 export class ClassRaceRunes extends CellSystem<ClassRacePair> {
     set(enabled: boolean) {
@@ -27,8 +31,8 @@ export class ClassRaceRunes extends CellSystem<ClassRacePair> {
 }
 
 finish('class-has-runes', () => {
-    LUAXML.file('Interface/FrameXML/RuneFrame.lua')
-        .replace('	local _, class = UnitClass("player")'
+    const runeFrame = LUAXML.file('Interface/FrameXML/RuneFrame.lua')
+    runeFrame.replace('	local _, class = UnitClass("player")'
     ,'	local _,class_id = UnitClass("player");\n	local _,race_id = UnitRace("player");')
 
     let classFilenameMap: {[key: number]: string} = {}
@@ -57,9 +61,11 @@ finish('class-has-runes', () => {
         }
         perClass[classFile].push(raceName)
     })
-    
-    LUAXML.file('Interface/FrameXML/RuneFrame.lua')
-        .replace(/^\tif \( class (?:~=|==) "DEATHKNIGHT" \) then$/
-        , `	if (not (${Object.entries(perClass).map(([cls,races])=>`(class_id == "${cls}" and (${races.map(race=>`race_id == "${race}"`).join(' or ')}))`).join(' or ')})) then`
-        )
+
+    const classCondition = FindRuneClassCondition(runeFrame.lines)
+    const operator = classCondition.includes(' class == ') ? '==' : '~='
+    const replacement = BuildRuneClassCondition(perClass, operator)
+    runeFrame.replace(classCondition, classCondition.endsWith('\r')
+        ? replacement + '\r'
+        : replacement)
 });
