@@ -1,12 +1,12 @@
 #pragma once
 
-#include "CustomPacketDefines.h"
+#include <CustomPacketBase.h>
+#include <CustomPacketDefines.h>
+#include <CustomPacketWrite.h>
 
-#include "CustomPacketBase.h"
-#include "CustomPacketWrite.h"
-
-class CUSTOM_PACKET_API CustomPacketRead : public CustomPacketBase {
-public:
+class CUSTOM_PACKET_API CustomPacketRead : public CustomPacketBase
+{
+  public:
     CustomPacketRead();
     CustomPacketRead(opcode_t opcode, chunkSize_t chunkSize);
     CustomPacketRead(CustomPacketWrite const& write);
@@ -14,7 +14,7 @@ public:
 
     std::string ReadString(std::string const& def = "");
 
-    template<typename T>
+    template <typename T>
     T Read(T def)
     {
         return CustomPacketBase::Read(def);

@@ -1,15 +1,9 @@
-#include "CustomPacketBuffer.h"
+#include <CustomPacketBuffer.h>
 
-CustomPacketBuffer::CustomPacketBuffer(
-      chunkSize_t minFragmentSize
-    , totalSize_t quota
-    , chunkSize_t bufferSize
-)
-    : m_minFragmentSize(minFragmentSize)
-    , m_maxFragmentSize(bufferSize)
-    , m_quota(quota)
-    , m_cur(0,bufferSize)
-{}
+CustomPacketBuffer::CustomPacketBuffer(chunkSize_t minFragmentSize, totalSize_t quota, chunkSize_t bufferSize)
+: m_minFragmentSize(minFragmentSize), m_maxFragmentSize(bufferSize), m_quota(quota), m_cur(0, bufferSize)
+{
+}
 
 CustomPacketBuffer::~CustomPacketBuffer()
 {
@@ -27,17 +21,9 @@ CustomPacketRead* CustomPacketBuffer::getCur()
     return &m_cur;
 }
 
-// Same cleanup as the end of _onSuccess: every fragment but the last is a copy this buffer owns; the last one still
-// belongs to the caller's packet.
 void CustomPacketBuffer::clearPacket()
 {
-    if (m_cur.m_chunks.empty())
-        return;
-    for (chunkCount_t i = 0; i < m_cur.m_chunks.size() - 1; ++i)
-    {
-        m_cur.m_chunks[i].Destroy();
-    }
-    m_cur.Clear();
+    m_cur.Destroy();
 }
 
 CustomPacketResult CustomPacketBuffer::ReceivePacket(chunkSize_t size, char* data, bool skipSuccess)
@@ -60,65 +46,63 @@ CustomPacketResult CustomPacketBuffer::ReceivePacket(chunkSize_t size, char* dat
         return _onError(CustomPacketResult::OUT_OF_SPACE, data);
     }
 
-    CustomPacketChunk chnk(size, data);
+    CustomPacketChunk chnk(size - CustomHeaderSize, data);
     CustomPacketHeader* hdr = chnk.Header();
 
     switch (hdr->totalFrags)
     {
-    case 0:
-        return _onError(CustomPacketResult::INVALID_FRAG_COUNT, data);
-    case 1:
-        AppendFragment(chnk, true);
-        if (skipSuccess)
-            return CustomPacketResult::HANDLED_MESSAGE;
-        else
-            return _onSuccess();
-    default:
-        if (m_cur.ChunkCount() == 0)
-        {
-            if (hdr->fragmentId != 0)
-            {
-                return _onError(CustomPacketResult::INVALID_FIRST_FRAG, data);
-            }
-
-            if (size < m_minFragmentSize)
-            {
-                return _onError(CustomPacketResult::TOO_SMALL_FRAGMENT, data);
-            }
-            AppendFragment(chnk, false);
-            return CustomPacketResult::HANDLED_FRAGMENT;
-        }
-        else
-        {
-            CustomPacketHeader* lastH = m_cur->Chunk(m_cur->ChunkCount() - 1)->Header();
-            if (lastH->totalFrags != hdr->totalFrags)
-            {
-                return _onError(CustomPacketResult::HEADER_MISMATCH, data);
-            }
-
-            if (hdr->fragmentId != lastH->fragmentId + 1)
-            {
-                return _onError(CustomPacketResult::INVALID_FRAG_ID, data);
-            }
-        }
-
-        if (
-            m_cur.ChunkCount() > 0
-            && hdr->fragmentId == m_cur.Chunk(0)->Header()->totalFrags - 1
-        ) {
+        case 0:
+            return _onError(CustomPacketResult::INVALID_FRAG_COUNT, data);
+        case 1:
             AppendFragment(chnk, true);
-            return _onSuccess();
-        }
-        else
-        {
-            // small fragments only apply to
-            if (size < m_minFragmentSize)
+            if (skipSuccess)
+                return CustomPacketResult::HANDLED_MESSAGE;
+            else
+                return _onSuccess();
+        default:
+            if (m_cur.ChunkCount() == 0)
             {
-                return _onError(CustomPacketResult::TOO_SMALL_FRAGMENT, data);
+                if (hdr->fragmentId != 0)
+                {
+                    return _onError(CustomPacketResult::INVALID_FIRST_FRAG, data);
+                }
+
+                if (size < m_minFragmentSize)
+                {
+                    return _onError(CustomPacketResult::TOO_SMALL_FRAGMENT, data);
+                }
+                AppendFragment(chnk, false);
+                return CustomPacketResult::HANDLED_FRAGMENT;
             }
-            AppendFragment(chnk, false);
-            return CustomPacketResult::HANDLED_FRAGMENT;
-        }
+            else
+            {
+                CustomPacketHeader* lastH = m_cur->Chunk(m_cur->ChunkCount() - 1)->Header();
+                if (lastH->totalFrags != hdr->totalFrags)
+                {
+                    return _onError(CustomPacketResult::HEADER_MISMATCH, data);
+                }
+
+                if (hdr->fragmentId != lastH->fragmentId + 1)
+                {
+                    return _onError(CustomPacketResult::INVALID_FRAG_ID, data);
+                }
+            }
+
+            if (m_cur.ChunkCount() > 0 && hdr->fragmentId == m_cur.Chunk(0)->Header()->totalFrags - 1)
+            {
+                AppendFragment(chnk, true);
+                return _onSuccess();
+            }
+            else
+            {
+                // small fragments only apply to
+                if (size < m_minFragmentSize)
+                {
+                    return _onError(CustomPacketResult::TOO_SMALL_FRAGMENT, data);
+                }
+                AppendFragment(chnk, false);
+                return CustomPacketResult::HANDLED_FRAGMENT;
+            }
     }
 }
 
@@ -133,30 +117,18 @@ CustomPacketResult CustomPacketBuffer::_onSuccess()
 {
     OnPacket(&m_cur);
 
-    // destroy all but the last fragment, since it's not a copy
-    for (chunkCount_t i = 0; i < m_cur.m_chunks.size() - 1; ++i)
-    {
-        m_cur.m_chunks[i].Destroy();
-    }
-    m_cur.Clear();
+    m_cur.Destroy();
     return CustomPacketResult::HANDLED_MESSAGE;
 }
 
-void CustomPacketBuffer::AppendFragment(CustomPacketChunk & chunk, bool isLast)
+void CustomPacketBuffer::AppendFragment(CustomPacketChunk& chunk, bool isLast)
 {
-    // buffer entries need to be made persistent
     if (isLast)
-    {
-        // todo: probably should happen elsewhere
         m_cur->m_opcode = chunk.Header()->opcode;
-        m_cur.Push(chunk);
-    }
-    else
-    {
-        CustomPacketChunk cpy(chunk);
-        cpy.Copy();
-        m_cur.Push(cpy);
-    }
+
+    // Push makes an owned copy, including the last fragment. The incoming
+    // buffer still belongs to the caller and must never be freed here.
+    m_cur.Push(chunk);
 }
 
 totalSize_t CustomPacketBuffer::Size()

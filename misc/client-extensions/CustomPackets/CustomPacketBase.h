@@ -1,23 +1,18 @@
 #pragma once
 
-#include "CustomPacketChunk.h"
-#include "CustomPacketDefines.h"
-
+#include <CustomPacketChunk.h>
+#include <CustomPacketDefines.h>
 #include <vector>
 
-class CUSTOM_PACKET_API CustomPacketBase {
-public:
-    CustomPacketBase(
-        CustomPacketBase const& base
-    );
+class CUSTOM_PACKET_API CustomPacketBase
+{
+  public:
+    CustomPacketBase(CustomPacketBase const& base);
     CustomPacketBase();
-    CustomPacketBase(
-          opcode_t opcode
-        , chunkSize_t maxChunkSize
-        , totalSize_t initialSize
-    );
-    std::vector<CustomPacketChunk> & buildMessages();
+    CustomPacketBase(opcode_t opcode, chunkSize_t maxChunkSize, totalSize_t initialSize);
+    std::vector<CustomPacketChunk>& buildMessages();
 
+    // Rewind reading without discarding the payload; Clear/Destroy empty it.
     void Reset();
     void Destroy();
     void Clear();
@@ -30,15 +25,12 @@ public:
 
     opcode_t Opcode();
 
-    void Print(
-        std::function<void(std::ostream&, uint8_t)> cb
-        , std::ostream& stream = std::cout
-    );
+    void Print(std::function<void(std::ostream&, uint8_t)> cb, std::ostream& stream = std::cout);
 
     void PrintAscii(std::ostream& stream = std::cout);
     void PrintBytes(std::ostream& stream = std::cout);
 
-protected:
+  protected:
     chunkSize_t MaxWritableChunkSize();
 
     // called by constructor and raw byte allocations
@@ -65,15 +57,16 @@ protected:
     void WriteBytes(totalSize_t size, char const* bytes);
     void ReadBytes(totalSize_t size, char* bytes);
     char* ReadBytes(totalSize_t size, bool padStr = false);
-private:
+
+  private:
     void incIdx(chunkSize_t amount);
 
     std::vector<CustomPacketChunk> m_chunks;
     totalSize_t m_size;
     chunkSize_t m_maxChunkSize; // including header
-    totalSize_t m_global_idx; // global read index
-    chunkSize_t m_idx; // chunk read index
-    chunkCount_t m_chunk; // chunk to read
+    totalSize_t m_global_idx;   // global read index
+    chunkSize_t m_idx;          // chunk read index
+    chunkCount_t m_chunk;       // chunk to read
     opcode_t m_opcode;
 
     friend class CustomPacketBuffer;
