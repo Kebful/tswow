@@ -30,6 +30,23 @@ void TSPacketWrite::SendToPlayer(TSPlayer player)
 	write->Destroy();
 }
 
+void TSPacketWrite::SendToNotInWorld(uint32 accountID)
+{
+
+	if (WorldSession* session = sWorld->FindSession(accountID))
+	{
+		auto& arr = write->buildMessages();
+		for (auto& chunk : arr)
+		{
+			WorldPacket packet(SERVER_TO_CLIENT_OPCODE, chunk.FullSize());
+			packet.append((uint8_t*)chunk.Data(), chunk.FullSize());
+			session->SendPacket(&packet);
+		}
+		// remove this line if we start sending a raw pointer to worldpacket
+		write->Destroy();
+	}
+}
+
 void TSPacketWrite::BroadcastMap(TSMap map, uint32_t teamOnly)
 {
 	auto& arr = write->buildMessages();
@@ -75,6 +92,29 @@ TSServerBuffer::TSServerBuffer(TSPlayer player)
 {
 }
 
+TSServerBuffer::TSServerBuffer(uint32 accountID)
+	: CustomPacketBuffer(
+		MIN_FRAGMENT_SIZE
+		, BUFFER_QUOTA
+		, MAX_FRAGMENT_SIZE
+	)
+	, account_id(accountID)
+{
+}
+
+opcode_t TSServerBuffer::GetOpcode()
+{
+    CustomPacketRead* value = getCur();
+    TSPacketRead read(value);
+    opcode_t opcode =  value->Opcode();
+    return opcode;
+}
+
+void TSServerBuffer::ClearPacket()
+{
+    clearPacket();
+}
+
 void TSServerBuffer::OnPacket(CustomPacketRead* value)
 {
 	// Expanded FIRE_ID macro because we need to reset the packet
@@ -85,40 +125,77 @@ void TSServerBuffer::OnPacket(CustomPacketRead* value)
 	TSPacketRead read(value);
 	opcode_t opcode = value->Opcode();
 
-	auto& cbs = ts_events.CustomPacket.OnReceive_callbacks;
-	for (auto const& cb : cbs.m_cxx_callbacks)
+	if (m_player)
 	{
-			cb(opcode, read, m_player);
-	}
-
-	for (auto const& cb : cbs.m_lua_callbacks)
-	{
+        auto& cbs = ts_events.CustomPacket.OnReceive_callbacks;
+		for (auto const& cb : cbs.m_cxx_callbacks)
+		{
 			cb(opcode, read, m_player);
 			value->Reset();
-	}
+		}
 
-	if (opcode < cbs.m_id_cxx_callbacks.size())
-	{
+		for (auto const& cb : cbs.m_lua_callbacks)
+		{
+			cb(opcode, read, m_player);
+			value->Reset();
+		}
+
+		if (opcode < cbs.m_id_cxx_callbacks.size())
+		{
 			for (auto const& cb : cbs.m_id_cxx_callbacks[opcode])
 			{
-					cb(opcode, read, m_player);
-					value->Reset();
+				cb(opcode, read, m_player);
+				value->Reset();
 			}
-	}
+		}
 
-	if (opcode < cbs.m_id_lua_callbacks.size())
-	{
+		if (opcode < cbs.m_id_lua_callbacks.size())
+		{
 			for (auto const& cb : cbs.m_id_lua_callbacks[opcode])
 			{
-					cb(opcode, read, m_player);
-					value->Reset();
+				cb(opcode, read, m_player);
+				value->Reset();
 			}
+		}
+	}else {
+        auto& cbs2 = ts_events.CustomPacket.OnReceiveNotInWorld_callbacks;
+		for (auto const& cb : cbs2.m_cxx_callbacks)
+		{
+			cb(opcode, read, account_id);
+			value->Reset();
+		}
+
+		for (auto const& cb : cbs2.m_lua_callbacks)
+		{
+			cb(opcode, read, account_id);
+			value->Reset();
+		}
+
+		if (opcode < cbs2.m_id_cxx_callbacks.size())
+		{
+			for (auto const& cb : cbs2.m_id_cxx_callbacks[opcode])
+			{
+				cb(opcode, read, account_id);
+				value->Reset();
+			}
+		}
+
+		if (opcode < cbs2.m_id_lua_callbacks.size())
+		{
+			for (auto const& cb : cbs2.m_id_lua_callbacks[opcode])
+			{
+				cb(opcode, read, account_id);
+				value->Reset();
+			}
+		}
 	}
 }
 
 void TSServerBuffer::OnError(CustomPacketResult error)
 {
-	m_player.player->GetSession()->KickPlayer("Custom packet error: "+std::to_string(uint32_t(error)));
+	// A not-in-world buffer has no player; its fragments are dropped by the caller.
+	if (m_player)
+		m_player.player->GetSession()->KickPlayer("Custom packet error: "+std::to_string(uint32_t(error)));
 }
 
 TSPacketWrite CreateCustomPacket(

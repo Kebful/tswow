@@ -9134,6 +9134,19 @@ declare namespace _hidden {
             , player: TSPlayer
             ) => void
         )
+
+        OnReceiveNotInWorld(callback: (
+            opcode: TSNumber<uint32>
+            , packet: TSPacketRead
+            , accountID: TSNumber<uint32>
+        ) => void
+        )
+        OnReceiveNotInWorld(id: EventID, callback: (
+            opcode: TSNumber<uint32>
+            , packet: TSPacketRead
+            , accountID: TSNumber<uint32>
+        ) => void
+        )
     }
 
     export class WorldPacket {
@@ -9735,6 +9748,7 @@ declare function StartGameEvent(event_id: uint16): void
 declare function StopGameEvent(event_id: uint16): void
 declare function GetLuaGarbageCur(): TSNumber<uint64>
 declare function GetLuaGarbageTotal(): TSNumber<uint64>
+declare function RegisterPacketForNotInWorld(opcode:number,isActive:bool): void;
 
 /**
  * @param entry - The id to be used for the new item template.
@@ -10068,6 +10082,7 @@ declare class TSPacketWrite {
     Size(): TSNumber<uint32>
 
     SendToPlayer(player: TSPlayer): void;
+    SendToNotInWorld(accountID: TSNumber<uint32>): void;
     BroadcastMap(map: TSMap, teamOnly: uint32): void;
     /**
      * @param self default: true

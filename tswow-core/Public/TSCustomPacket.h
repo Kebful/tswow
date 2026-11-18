@@ -50,6 +50,7 @@ public:
 	totalSize_t Size() { return write->Size(); }
 
 	void SendToPlayer(TSPlayer player);
+	void SendToNotInWorld(uint32 accountID);
 	void BroadcastMap(TSMap map, uint32_t teamOnly = 0);
 	void BroadcastAround(TSWorldObject obj, float range, bool self = true);
 };
@@ -96,9 +97,13 @@ class TSServerBuffer : public CustomPacketBuffer
 {
 public:
 	TSServerBuffer(TSPlayer player);
+	TSServerBuffer(uint32 accountID);
 	TSPlayer m_player = nullptr;
+	uint32 account_id = 0;
 	virtual void OnPacket(CustomPacketRead* value) override final;
 	virtual void OnError(CustomPacketResult error) override final;
+	opcode_t GetOpcode();
+	void ClearPacket();
 };
 
 TC_GAME_API TSPacketWrite CreateCustomPacket(

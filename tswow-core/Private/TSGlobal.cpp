@@ -26,6 +26,15 @@
 #include "Timer.h"
 #include "GameEventMgr.h"
 #include "TSItemTemplate.h"
+#include <algorithm>
+#include <unordered_map>
+
+std::unordered_map<opcode_t, bool> notInWorldCustomOpcodeMap;
+
+void RegisterPacketForNotInWorld(opcode_t opcode, bool isActive)
+{
+     notInWorldCustomOpcodeMap[opcode] = isActive;
+}
 
 TSItemTemplate CreateItemTemplate(uint32 entry,uint32 copyItemID)
 {
