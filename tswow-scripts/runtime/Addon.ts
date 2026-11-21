@@ -151,6 +151,12 @@ export class Addon {
 
         let names: string[] = before.concat([`TSAddons\\${modPath}\\addon\\addon.lua`]);
         wfs.iterate(this.path.build,(name)=>{
+            // The build tree contains directories; only files belong in a .toc. Without this guard the
+            // callback emits entries like "TSAddons\\<mod>\\addon\\" (a directory), which aborts the
+            // client's FrameXML load.
+            if((name as any).isDirectory && (name as any).isDirectory()) {
+                return;
+            }
             let relative = wfs.relative(this.path.build.join('addon'),name)
             relative = relative.split('/').join('\\');
             if(all.includes(relative)) {
