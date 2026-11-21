@@ -132,7 +132,14 @@ export class Addon {
 
         const readToc = (tocPath: FilePath) => {
             if(!wfs.exists(tocPath)) return []
-            return wfs.read(tocPath).split('/').join('\\').split('\n');
+            return wfs.read(tocPath)
+                .split('/').join('\\')
+                .split('\n')
+                .map(x=>x.endsWith('\r') ? x.slice(0,-1) : x)
+                // A trailing newline is normal in an authored .toc. Keeping the blank entry turns it
+                // into "TSAddons\<mod>\addon\", which the client tries to load as a file and which
+                // aborts the FrameXML tree (XMLTree_Cleanup -> XMLNode::~XMLNode).
+                .filter(x=>x.trim().length > 0);
         }
 
         let beforelib = readToc(this.path.beforelib_toc);
@@ -151,12 +158,7 @@ export class Addon {
 
         let names: string[] = before.concat([`TSAddons\\${modPath}\\addon\\addon.lua`]);
         wfs.iterate(this.path.build,(name)=>{
-            // The build tree contains directories; only files belong in a .toc. Without this guard the
-            // callback emits entries like "TSAddons\\<mod>\\addon\\" (a directory), which aborts the
-            // client's FrameXML load.
-            if((name as any).isDirectory && (name as any).isDirectory()) {
-                return;
-            }
+            // wfs.iterate only yields files; blank toc lines are filtered in readToc above.
             let relative = wfs.relative(this.path.build.join('addon'),name)
             relative = relative.split('/').join('\\');
             if(all.includes(relative)) {
