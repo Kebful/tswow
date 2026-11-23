@@ -72,6 +72,9 @@ export function cleanSQL() {
     col('playercreateinfo_skills')
     col('playercreateinfo_spell_custom')
     col('playercreateinfo_action')
+    // FFXIV Haven: a datascript that stops granting a starting item must not leave the row
+    // behind (the server equips playercreateinfo_item rows while creating a character).
+    col('playercreateinfo_item')
     col('mail_loot_template')
     col('fishing_loot_template')
     col('creature_loot_template')

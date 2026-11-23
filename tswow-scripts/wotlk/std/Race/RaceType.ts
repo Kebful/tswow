@@ -27,6 +27,16 @@ export enum RaceIDs {
     //
     , BLOODELF = 10
     , DRAENEI  = 11
+    // FFXIV Haven: the nine playable FFXIV bodies (module ChrRaces rows 12..20).
+    , HYUR_MIDLANDER  = 12
+    , HYUR_HIGHLANDER = 13
+    , ELEZEN          = 14
+    , MIQOTE          = 15
+    , ROEGADYN        = 16
+    , LALAFELL        = 17
+    , AURA            = 18
+    , HROTHGAR        = 19
+    , VIERA           = 20
 }
 
 export enum RaceMask {
@@ -41,4 +51,24 @@ export enum RaceMask {
     //
     , BLOODELF = 0x200
     , DRAENEI  = 0x400
+    // FFXIV Haven: bit (raceID - 1) for races 12..20.
+    , HYUR_MIDLANDER  = 0x800
+    , HYUR_HIGHLANDER = 0x1000
+    , ELEZEN          = 0x2000
+    , MIQOTE          = 0x4000
+    , ROEGADYN        = 0x8000
+    , LALAFELL        = 0x10000
+    , AURA            = 0x20000
+    , HROTHGAR        = 0x40000
+    , VIERA           = 0x80000
 }
+
+// FFXIV Haven: the nine playable FFXIV bodies as one AllowableRace/race-mask value. Lives next to
+// the enums that define them so callers never rebuild the mask by hand.
+// Mask bit of one race id: bit (raceID - 1), the SQL/DBC convention.
+export const FfxivRaceMask = (id: RaceIDs): number => (1 << (id - 1)) >>> 0;
+
+export const FFXIV_RACE_MASK =
+    (RaceMask.HYUR_MIDLANDER | RaceMask.HYUR_HIGHLANDER | RaceMask.ELEZEN | RaceMask.MIQOTE |
+     RaceMask.ROEGADYN | RaceMask.LALAFELL | RaceMask.AURA | RaceMask.HROTHGAR |
+     RaceMask.VIERA) >>> 0;
