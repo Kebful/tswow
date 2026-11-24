@@ -8463,6 +8463,15 @@ declare namespace _hidden {
         OnEffectManaShield(callback: (effect: TSAuraEffect, application: TSAuraApplication, damage: TSDamageInfo, absorbAmount: TSMutableNumber<uint32>, cancel: TSMutable<boolean,boolean> )=>void)
         OnEffectManaShield(id: EventID, callback: (effect: TSAuraEffect, application: TSAuraApplication, damage: TSDamageInfo, absorbAmount: TSMutableNumber<uint32>, cancel: TSMutable<boolean,boolean> )=>void)
 
+        /** Called after all proc chance calculations (ppm, spell mods, level reduction) */
+        OnCalcProcChanceLate(callback: (eventInfo: TSProcEventInfo, chance: TSMutableNumber<float>) => void): T
+        /** Called after all proc chance calculations (ppm, spell mods, level reduction) */
+        OnCalcProcChanceLate(id: EventID, callback: (eventInfo: TSProcEventInfo, chance: TSMutableNumber<float>) => void): T
+
+        /** Called from Unit::EnergizeBySpell before the power is applied; `who` is the energized unit (the victim argument). Not fired when the FFXIV gauge suppresses WoW rage. */
+        OnEnergizeBySpell(callback: (who: TSUnit, spellInfo: TSSpellInfo, powerType: TSNumber<uint8>, amount: TSMutableNumber<int32>) => void): T
+        OnEnergizeBySpell(id: EventID, callback: (who: TSUnit, spellInfo: TSSpellInfo, powerType: TSNumber<uint8>, amount: TSMutableNumber<int32>) => void): T
+
         OnSetDuration(callback: (effect: TSAura, duration: TSMutableNumber<int32>, withMods: TSMutable<bool,bool>) => void);
         OnSetDuration(id: EventID, callback: (effect: TSAura, duration: TSMutableNumber<int32>, withMods: TSMutable<bool,bool>) => void);
 
@@ -8477,6 +8486,10 @@ declare namespace _hidden {
 
         OnBeforeCast(callback: (spell: TSSpell, cancel: TSMutable<boolean,boolean> )=>void)
         OnBeforeCast(id: EventID, callback: (spell: TSSpell, cancel: TSMutable<boolean,boolean> )=>void)
+
+        /** Fired when a spell enters Spell::prepare's non-instant branch, before stealth is broken. `stealthed` is the caster's stealth state at that point. */
+        OnPrepared(callback: (spell: TSSpell, stealthed: bool)=>void)
+        OnPrepared(id: EventID, callback: (spell: TSSpell, stealthed: bool)=>void)
 
         OnBeforeHit(callback: (spell: TSSpell, miss: SpellMissInfo, cancel: TSMutable<boolean,boolean> )=>void)
         OnBeforeHit(id: EventID, callback: (spell: TSSpell, miss: SpellMissInfo, cancel: TSMutable<boolean,boolean> )=>void)

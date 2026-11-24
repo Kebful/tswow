@@ -491,6 +491,8 @@ struct TSEvents
         ID_EVENT(OnCalcHit, TSSpellInfo, TSMutableNumber<int32>, TSWorldObject, TSUnit)
         ID_EVENT(OnCalcResist, TSSpellInfo, TSMutableNumber<int32>, TSWorldObject, TSUnit)
         ID_EVENT(OnCalcMeleeMiss, TSSpellInfo, TSMutableNumber<float>, TSUnit, TSUnit, TSNumber<uint8> attackType, TSNumber<int32> skillDiff)
+        ID_EVENT(OnCalcProcChanceLate, TSProcEventInfo, TSMutableNumber<float> chance)
+        ID_EVENT(OnEnergizeBySpell, TSUnit, TSSpellInfo, TSNumber<uint8>, TSMutableNumber<int32>)
 
         ID_EVENT(OnCheckAreaTarget, TSAura, TSUnit, TSMutable<bool,bool> result, TSMutable<bool,bool> cancelDefault)
         ID_EVENT(OnCheckEffectProc, TSAuraEffect, TSAuraApplication, TSProcEventInfo, TSMutable<bool,bool> result, TSMutable<bool,bool> cancelDefault)
@@ -517,6 +519,7 @@ struct TSEvents
         ID_EVENT(OnAfterCast, TSSpell, TSMutable<bool,bool> cancelDefault)
         ID_EVENT(OnAfterHit, TSSpell, TSMutable<bool,bool> cancelDefault)
         ID_EVENT(OnBeforeCast, TSSpell, TSMutable<bool,bool> cancelDefault)
+        ID_EVENT(OnPrepared, TSSpell, bool)
         ID_EVENT(OnBeforeHit, TSSpell, TSNumber<uint32>, TSMutable<bool,bool> cancelDefault)
         ID_EVENT(OnDestinationTargetSelect, TSSpell, TSSpellDestination, TSNumber<uint32> index, TSSpellImplicitTargetInfo, TSMutable<bool,bool> cancelDefault)
         ID_EVENT(OnObjectAreaTargetSelect, TSSpell, TSWorldObjectCollection, TSNumber<uint32> index, TSSpellImplicitTargetInfo, TSMutable<bool,bool> cancelDefault)
