@@ -62,6 +62,7 @@
 #include "ObjectMgr.h"
 #include "DBCStructure.h"
 #include "LFG.h"
+#include "FFXIV/Gauge/FFXIVJobGauge.h"
 
 #include <memory.h>
 
@@ -176,6 +177,31 @@ bool TSPlayer::EnsureClassSwitchSpellKnown()
 TSNumber<uint32> TSPlayer::GetClassSwitchSpellId()
 {
     return player->GetClassSwitchSpellId();
+}
+
+TSNumber<uint32> TSPlayer::GetFfxivJobGauge()
+{
+    return FFXIV::Gauge::GetFfxivGauge(*player);
+}
+
+TSNumber<uint32> TSPlayer::GetFfxivJobGaugeMax()
+{
+    return FFXIV::Gauge::GetFfxivGaugeMax(*player);
+}
+
+TSNumber<uint32> TSPlayer::AddFfxivJobGauge(int32 delta)
+{
+    return FFXIV::Gauge::AddFfxivGauge(*player, delta);
+}
+
+TSNumber<uint32> TSPlayer::SetFfxivJobGauge(int32 value)
+{
+    return FFXIV::Gauge::SetFfxivGauge(*player, value);
+}
+
+void ClaimFfxivJobGauge(uint8 jobId)
+{
+    FFXIV::Gauge::SetFfxivJobGaugeScriptOwned(jobId, true);
 }
 
 /**

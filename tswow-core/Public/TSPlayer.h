@@ -55,6 +55,13 @@ public:
 	bool IsClassSwitchSpell(uint32 spellId);
 	bool EnsureClassSwitchSpellKnown();
 	TSNumber<uint32> GetClassSwitchSpellId();
+	// FFXIV job gauge (FFXIV/Gauge/FFXIVJobGauge.h), for the player's current job. Value and maximum
+	// are 0 and every change is a no-op when that job has no gauge row. Add/Set clamp to 0..max, mirror
+	// the value into POWER_RAGE and send the 0x7A62 packet when it changed; they return the new value.
+	TSNumber<uint32> GetFfxivJobGauge();
+	TSNumber<uint32> GetFfxivJobGaugeMax();
+	TSNumber<uint32> AddFfxivJobGauge(int32 delta);
+	TSNumber<uint32> SetFfxivJobGauge(int32 value);
 	TSDictionary<TSNumber<uint32>, TSPlayerSpell> GetSpellMap();
 	bool HasAtLoginFlag(uint32 flag);
 	bool HasQuestForGO(int32 entry);
@@ -384,5 +391,9 @@ private:
 		void LSendShowMailBox1(TSNumber<uint32> guid);
 		friend class TSLua;
 };
+
+// A livescript calls this once at load for the job whose gauge it owns: the core then applies none of
+// that job's `ffxiv_action_gauge` rows, cost gate or waivers (FFXIV/Gauge/FFXIVJobGauge.h "Who decides").
+TC_GAME_API void ClaimFfxivJobGauge(uint8 jobId);
 
 LUA_PTR_TYPE(TSPlayer)

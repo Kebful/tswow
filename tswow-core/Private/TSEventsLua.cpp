@@ -61,6 +61,7 @@ void TSLua::load_events(sol::state& state)
     LUA_HANDLE(player_events, PlayerEvents, OnSpellCast);
     LUA_HANDLE(player_events, PlayerEvents, OnSpellCastSucceeded);
     LUA_HANDLE(player_events, PlayerEvents, OnLogin);
+    LUA_HANDLE(player_events, PlayerEvents, OnPowerChanged);
     LUA_HANDLE(player_events, PlayerEvents, OnReload);
     LUA_HANDLE(player_events, PlayerEvents, OnLogout);
     LUA_HANDLE(player_events, PlayerEvents, OnCreate);
@@ -211,6 +212,8 @@ void TSLua::load_events(sol::state& state)
     LUA_MAPPED_HANDLE(spell_events, SpellEvents, OnPrepared);
     LUA_MAPPED_HANDLE(spell_events, SpellEvents, OnCalcProcChanceLate);
     LUA_MAPPED_HANDLE(spell_events, SpellEvents, OnEnergizeBySpell);
+    LUA_MAPPED_HANDLE(spell_events, SpellEvents, OnFfxivActionDamage);
+    LUA_MAPPED_HANDLE(spell_events, SpellEvents, OnFfxivActionResolved);
     LUA_MAPPED_HANDLE(spell_events, SpellEvents, OnBeforeHit);
     LUA_MAPPED_HANDLE(spell_events, SpellEvents, OnDestinationTargetSelect);
     LUA_MAPPED_HANDLE(spell_events, SpellEvents, OnObjectAreaTargetSelect);

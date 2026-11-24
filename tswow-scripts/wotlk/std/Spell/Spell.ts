@@ -410,11 +410,12 @@ export class Spell extends MainEntityID<SpellRow> {
                 code.non_def_num('Chance',this.Proc.Chance)
                 code.non_def_num('Charges',this.Proc.Charges)
                 code.non_def_num('ProcsPerMinute',this.Proc.ProcsPerMinute)
+                code.non_def_num('Cooldown',this.Proc.Cooldown)
 
                 code.non_def_num('SpellFamily',this.Proc.SpellFamily)
-                code.non_def_num('Classmask.A',this.Proc.ClassMask.A)
-                code.non_def_num('Classmask.B',this.Proc.ClassMask.A)
-                code.non_def_num('Classmask.C',this.Proc.ClassMask.A)
+                code.non_def_num('ClassMask.A',this.Proc.ClassMask.A)
+                code.non_def_num('ClassMask.B',this.Proc.ClassMask.B)
+                code.non_def_num('ClassMask.C',this.Proc.ClassMask.C)
 
                 code.non_zero_bitmask('DisableEffectsMask',this.Proc.DisableEffectsMask)
                 code.non_zero_bitmask('HitMask',this.Proc.HitMask)

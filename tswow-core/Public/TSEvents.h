@@ -144,6 +144,7 @@ struct TSEvents
          EVENT(OnCreatureKill, TSPlayer, TSCreature)
          EVENT(OnPlayerKilledByCreature, TSCreature, TSPlayer)
          EVENT(OnLevelChanged, TSPlayer, TSNumber<uint8>)
+         EVENT(OnPowerChanged, TSPlayer, TSNumber<uint8>, TSNumber<uint32>, TSNumber<uint32>)
          EVENT(OnFreeTalentPointsChanged, TSPlayer, TSNumber<uint32>)
          EVENT(OnTalentsResetEarly, TSPlayer, TSMutable<bool,bool>)
          EVENT(OnTalentsReset, TSPlayer, bool)
@@ -493,6 +494,8 @@ struct TSEvents
         ID_EVENT(OnCalcMeleeMiss, TSSpellInfo, TSMutableNumber<float>, TSUnit, TSUnit, TSNumber<uint8> attackType, TSNumber<int32> skillDiff)
         ID_EVENT(OnCalcProcChanceLate, TSProcEventInfo, TSMutableNumber<float> chance)
         ID_EVENT(OnEnergizeBySpell, TSUnit, TSSpellInfo, TSNumber<uint8>, TSMutableNumber<int32>)
+        ID_EVENT(OnFfxivActionDamage, TSSpellInfo spell, TSUnit target, TSMutableNumber<int32> damage, TSNumber<uint8> crit)
+        ID_EVENT(OnFfxivActionResolved, TSPlayer player, TSSpellInfo spell, TSNumber<uint32> actionId, bool comboCorrect)
 
         ID_EVENT(OnCheckAreaTarget, TSAura, TSUnit, TSMutable<bool,bool> result, TSMutable<bool,bool> cancelDefault)
         ID_EVENT(OnCheckEffectProc, TSAuraEffect, TSAuraApplication, TSProcEventInfo, TSMutable<bool,bool> result, TSMutable<bool,bool> cancelDefault)

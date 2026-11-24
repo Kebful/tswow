@@ -457,6 +457,13 @@ declare interface TSPlayer extends TSUnit, TSDBJsonProvider {
     IsClassSwitchSpell(spellId: uint32): bool
     EnsureClassSwitchSpellKnown(): bool
     GetClassSwitchSpellId(): TSNumber<uint32>
+    /** FFXIV job gauge of the player's current job: 0 when the job has no gauge. */
+    GetFfxivJobGauge(): TSNumber<uint32>
+    GetFfxivJobGaugeMax(): TSNumber<uint32>
+    /** Adds `delta` (negative subtracts), clamped to 0..max; mirrors POWER_RAGE and sends the gauge packet when the value changed. Returns the new value. */
+    AddFfxivJobGauge(delta: int32): TSNumber<uint32>
+    /** Sets the gauge to `value`, clamped to 0..max; same mirror and packet. Returns the new value. */
+    SetFfxivJobGauge(value: int32): TSNumber<uint32>
 
     /**
      * Returns all spells known by this player
@@ -8017,6 +8024,7 @@ declare namespace _hidden {
         OnCreatureKill(callback: (killer : TSPlayer,killed : TSCreature)=>void);
         OnPlayerKilledByCreature(callback: (killer : TSCreature,killed : TSPlayer)=>void);
         OnLevelChanged(callback: (player : TSPlayer,oldLevel : uint8)=>void);
+        OnPowerChanged(callback: (Caster: TSPlayer, PowerType: TSNumber<uint8>, CurPower: TSNumber<uint32>, MaxPower: TSNumber<uint32>) => void);
         OnLearnTalent(callback: (player: TSPlayer, tabId: uint32, talentId: uint32, talentRank: uint32, spellId: uint32, cancel: TSMutable<boolean,boolean>)=>void)
         OnFreeTalentPointsChanged(callback: (player : TSPlayer,points : uint32)=>void);
         OnTalentsReset(callback: (player : TSPlayer,noCost : bool)=>void);
@@ -8468,9 +8476,17 @@ declare namespace _hidden {
         /** Called after all proc chance calculations (ppm, spell mods, level reduction) */
         OnCalcProcChanceLate(id: EventID, callback: (eventInfo: TSProcEventInfo, chance: TSMutableNumber<float>) => void): T
 
-        /** Called from Unit::EnergizeBySpell before the power is applied; `who` is the energized unit (the victim argument). Not fired when the FFXIV gauge suppresses WoW rage. */
+        /** Called from Unit::EnergizeBySpell before the power is applied; `who` is the energized unit (the victim argument). Fires even when the FFXIV gauge discards the rage gain. */
         OnEnergizeBySpell(callback: (who: TSUnit, spellInfo: TSSpellInfo, powerType: TSNumber<uint8>, amount: TSMutableNumber<int32>) => void): T
         OnEnergizeBySpell(id: EventID, callback: (who: TSUnit, spellInfo: TSSpellInfo, powerType: TSNumber<uint8>, amount: TSMutableNumber<int32>) => void): T
+
+        /** FFXIV action damage, after FFXIVCombatMath produced the final value and before it is applied. The number never passes through WoW's spell-power, armor, crit or bonus stages; change `damage` to adjust it, or set 0 to take no damage. `crit` is 1 when the FFXIV roll crit. */
+        OnFfxivActionDamage(callback: (spellInfo: TSSpellInfo, target: TSUnit, damage: TSMutableNumber<int32>, crit: TSNumber<uint8>) => void): T
+        OnFfxivActionDamage(id: EventID, callback: (spellInfo: TSSpellInfo, target: TSUnit, damage: TSMutableNumber<int32>, crit: TSNumber<uint8>) => void): T
+
+        /** FFXIV action resolved: once per successful cast of a mapped FFXIV action, after every target went through the action damage hook (Spell::_handle_finish_phase). `comboCorrect` is true when the cast was the correct next step of its chain. The place to move a job gauge (TSPlayer.AddFfxivJobGauge); keyed by spell id. */
+        OnFfxivActionResolved(callback: (player: TSPlayer, spellInfo: TSSpellInfo, actionId: TSNumber<uint32>, comboCorrect: bool) => void): T
+        OnFfxivActionResolved(id: EventID, callback: (player: TSPlayer, spellInfo: TSSpellInfo, actionId: TSNumber<uint32>, comboCorrect: bool) => void): T
 
         OnSetDuration(callback: (effect: TSAura, duration: TSMutableNumber<int32>, withMods: TSMutable<bool,bool>) => void);
         OnSetDuration(id: EventID, callback: (effect: TSAura, duration: TSMutableNumber<int32>, withMods: TSMutable<bool,bool>) => void);
@@ -10153,6 +10169,8 @@ declare function MsgString(size: number): (field: any, name: any)=>void
 declare function MsgStringArray(arrSize: number, stringSize: number): (field: any, name: any)=>void
 
 declare function CreateCustomPacket(opcode: uint32, size: uint32): TSPacketWrite;
+/** Claims the FFXIV job gauge of `jobId` for this livescript: the core then applies none of that job's gauge rows, cost gate or cost waivers. Call once at script load. */
+declare function ClaimFfxivJobGauge(jobId: uint8): void;
 
 // Null values
 declare function NULL_UNIT(): TSUnit | undefined;

@@ -58,6 +58,16 @@ export abstract class ClassSet<T> extends MaskCell<T> {
         return this.owner;
     }
 
+    /** Same as set(), taking the three words as one tuple (the shape get2() returns). */
+    set2([a, b, c]: [number, number, number]) {
+        return this.set(a, b, c);
+    }
+
+    /** The three 32-bit words (A, B, C) of the mask. */
+    get2(): [number, number, number] {
+        return [this.A.get(), this.B.get(), this.C.get()];
+    }
+
     objectify() {
         let values: string[] = []
         for(let i=0;i<96;++i) {
