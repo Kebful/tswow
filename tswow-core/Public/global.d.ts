@@ -457,14 +457,9 @@ declare interface TSPlayer extends TSUnit, TSDBJsonProvider {
     IsClassSwitchSpell(spellId: uint32): bool
     EnsureClassSwitchSpellKnown(): bool
     GetClassSwitchSpellId(): TSNumber<uint32>
-    /** FFXIV job gauge of the player's current job: 0 when the job has no gauge. */
-    GetFfxivJobGauge(): TSNumber<uint32>
-    GetFfxivJobGaugeMax(): TSNumber<uint32>
-    /** Adds `delta` (negative subtracts), clamped to 0..max; mirrors POWER_RAGE and sends the gauge packet when the value changed. Returns the new value. */
-    AddFfxivJobGauge(delta: int32): TSNumber<uint32>
-    /** Sets the gauge to `value`, clamped to 0..max; same mirror and packet. Returns the new value. */
-    SetFfxivJobGauge(value: int32): TSNumber<uint32>
-
+    /** ClassJob row of the player's FFXIV job: their class's own job, or the later job whose Soul of
+     * <Job> they wear (FFXIV/Jobs/FFXIVJobSlot.h). 0 for a class outside the module. */
+    GetFfxivJobId(): TSNumber<uint32>
     /**
      * Returns all spells known by this player
      */
@@ -8484,7 +8479,7 @@ declare namespace _hidden {
         OnFfxivActionDamage(callback: (spellInfo: TSSpellInfo, target: TSUnit, damage: TSMutableNumber<int32>, crit: TSNumber<uint8>) => void): T
         OnFfxivActionDamage(id: EventID, callback: (spellInfo: TSSpellInfo, target: TSUnit, damage: TSMutableNumber<int32>, crit: TSNumber<uint8>) => void): T
 
-        /** FFXIV action resolved: once per successful cast of a mapped FFXIV action, after every target went through the action damage hook (Spell::_handle_finish_phase). `comboCorrect` is true when the cast was the correct next step of its chain. The place to move a job gauge (TSPlayer.AddFfxivJobGauge); keyed by spell id. */
+        /** FFXIV action resolved: once per successful cast of a mapped FFXIV action, after every target went through the action damage hook (Spell::_handle_finish_phase). `comboCorrect` is true when the cast was the correct next step of its chain. The livescripts' gauge, charge and proc hooks run here (livescripts/job-resources/jobgauge.ts); keyed by spell id. */
         OnFfxivActionResolved(callback: (player: TSPlayer, spellInfo: TSSpellInfo, actionId: TSNumber<uint32>, comboCorrect: bool) => void): T
         OnFfxivActionResolved(id: EventID, callback: (player: TSPlayer, spellInfo: TSSpellInfo, actionId: TSNumber<uint32>, comboCorrect: bool) => void): T
 
@@ -10169,8 +10164,6 @@ declare function MsgString(size: number): (field: any, name: any)=>void
 declare function MsgStringArray(arrSize: number, stringSize: number): (field: any, name: any)=>void
 
 declare function CreateCustomPacket(opcode: uint32, size: uint32): TSPacketWrite;
-/** Claims the FFXIV job gauge of `jobId` for this livescript: the core then applies none of that job's gauge rows, cost gate or cost waivers. Call once at script load. */
-declare function ClaimFfxivJobGauge(jobId: uint8): void;
 
 // Null values
 declare function NULL_UNIT(): TSUnit | undefined;
