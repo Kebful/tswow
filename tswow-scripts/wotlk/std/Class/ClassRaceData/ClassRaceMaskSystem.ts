@@ -2,10 +2,10 @@ import { makeMask, MaskCellWrite, MaskCon } from "../../../../data/cell/cells/Ma
 import { MultiRowSystem } from "../../../../data/cell/systems/MultiRowSystem";
 import { IDeletable, MainEntity } from "../../Misc/Entity";
 import { RaceMask } from "../../Race/RaceType";
-import { ClassMask } from "../ClassRegistry";
+import { ClassMaskCell, ClassMaskInput, makeClassMask } from "../ClassMaskCell";
 
 export interface IClassRaceMaskEntry {
-    readonly ClassMask: MaskCellWrite<this,typeof ClassMask>
+    readonly ClassMask: ClassMaskCell<this>
     readonly RaceMask: MaskCellWrite<this,typeof RaceMask>
 }
 
@@ -13,14 +13,14 @@ export abstract class ClassRaceMaskEntry<T extends IDeletable>
 extends MainEntity<T>
 implements IClassRaceMaskEntry
 {
-    abstract get ClassMask(): MaskCellWrite<this,typeof ClassMask>
+    abstract get ClassMask(): ClassMaskCell<this>
     abstract get RaceMask(): MaskCellWrite<this,typeof RaceMask>
 }
 
 export abstract class ClassRaceMaskSystemBase<E extends IClassRaceMaskEntry,T>
     extends MultiRowSystem<E,T>
 {
-    clearClass(cls: MaskCon<keyof typeof ClassMask>) {
+    clearClass(cls: ClassMaskInput) {
         this.forEach(v=>{
             v.ClassMask.set(cls,'NOT')
         })
@@ -35,7 +35,7 @@ export abstract class ClassRaceMaskSystemBase<E extends IClassRaceMaskEntry,T>
         return this.owner;
     }
 
-    clearPair(cls: MaskCon<keyof typeof ClassMask>, race: MaskCon<keyof typeof RaceMask>) {
+    clearPair(cls: ClassMaskInput, race: MaskCon<keyof typeof RaceMask>) {
         this.forEach(v=>{
             if(v.ClassMask.hasAll(cls) && v.RaceMask.hasAll(race)) {
                 v.ClassMask.set(cls,'NOT');
@@ -47,12 +47,12 @@ export abstract class ClassRaceMaskSystemBase<E extends IClassRaceMaskEntry,T>
 }
 
 export abstract class ClassRaceMaskSystem<E extends ClassRaceMaskEntry<R>,R extends IDeletable,T> extends ClassRaceMaskSystemBase<E,T> {
-    protected abstract _addGet(classmask: number, racemask: number): E;
-    addGet(classes: MaskCon<keyof typeof ClassMask>, races: MaskCon<keyof typeof RaceMask>) {
-        return this._addGet(makeMask(ClassMask,classes),makeMask(RaceMask,races));
+    protected abstract _addGet(classmask: bigint, racemask: number): E;
+    addGet(classes: ClassMaskInput, races: MaskCon<keyof typeof RaceMask>) {
+        return this._addGet(makeClassMask(classes),makeMask(RaceMask,races));
     }
 
-    addMod(classes: MaskCon<keyof typeof ClassMask>, races: MaskCon<keyof typeof RaceMask>, callback: (entity: E)=>void) {
+    addMod(classes: ClassMaskInput, races: MaskCon<keyof typeof RaceMask>, callback: (entity: E)=>void) {
         callback(this.addGet(classes,races));
         return this.owner;
     }

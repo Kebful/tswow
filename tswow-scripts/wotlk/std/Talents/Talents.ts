@@ -17,6 +17,7 @@
 import { EnumCon, makeEnum } from "../../../data/cell/cells/EnumCell";
 import { lt } from "../../../data/query/Relations";
 import { Table } from "../../../data/table/Table";
+import { classBit } from "../Class/ClassMaskCell";
 import { TalentTabQuery, TalentTabRow } from "../../dbc/TalentTab";
 import { DBC } from "../../DBCFiles";
 import { ClassIDs } from "../Class/ClassIDs";
@@ -64,7 +65,7 @@ export class TalentTreeRegistryClass
 
     forClass(cls: EnumCon<keyof typeof ClassIDs>) {
         let classId = makeEnum(ClassIDs,cls);
-        return this.filter(e=>e.row.ClassMask.get() & (1<<(classId-1))).sort((a,b)=>a.OrderIndex.get() > b.OrderIndex.get() ? 1 : -1)
+        return this.filter(e=>e.row.ClassMask.get() & classBit(classId)).sort((a,b)=>a.OrderIndex.get() > b.OrderIndex.get() ? 1 : -1)
     }
 }
 

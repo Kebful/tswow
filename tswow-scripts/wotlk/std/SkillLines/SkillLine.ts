@@ -3,6 +3,7 @@ import { MaskCon } from "../../../data/cell/cells/MaskCell";
 import { MultiRowSystem } from "../../../data/cell/systems/MultiRowSystem";
 import { SkillLineRow } from "../../dbc/SkillLine";
 import { DBC } from "../../DBCFiles";
+import { ClassMaskInput } from "../Class/ClassMaskCell";
 import { ClassMask } from "../Class/ClassRegistry";
 import { MainEntity } from "../Misc/Entity";
 import { RaceMask } from "../Race/RaceType";
@@ -50,13 +51,13 @@ export class SkillLine extends MainEntity<SkillLineRow> {
         return this;
     }
 
-    enableAutolearn(cls?: MaskCon<keyof typeof ClassMask>, race?: MaskCon<keyof typeof RaceMask>, rank: number = 0, callback?: (value: SkillRaceClassInfo)=>void) {
+    enableAutolearn(cls?: ClassMaskInput, race?: MaskCon<keyof typeof RaceMask>, rank: number = 0, callback?: (value: SkillRaceClassInfo)=>void) {
         this.enable(cls,race,callback);
         this.Autolearn.addGet(cls,race).Rank.set(rank);
         return this;
     }
 
-    enable(cls?: MaskCon<keyof typeof ClassMask>, race?: MaskCon<keyof typeof RaceMask>, callback?: (value: SkillRaceClassInfo)=>void) {
+    enable(cls?: ClassMaskInput, race?: MaskCon<keyof typeof RaceMask>, callback?: (value: SkillRaceClassInfo)=>void) {
         let rci = this.RaceClassInfos.addGet(cls,race)
         if(callback) {
             callback(rci);

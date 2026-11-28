@@ -108,6 +108,17 @@ export class Connection {
         this.settings = obj;
         this.settings.dateStrings = true;
         this.settings.multipleStatements = true;
+        this.settings.typeCast = (field: mysql.Field, next: () => unknown) => {
+            switch (field.name.toLowerCase()) {
+                case 'classmask':
+                case 'allowableclass':
+                    if (['LONG', 'LONGLONG', 'SHORT', 'INT24', 'TINY'].includes(field.type)) {
+                        const value = field.string();
+                        return value === null ? null : BigInt(value);
+                    }
+            }
+            return next();
+        };
     }
 
     protected statements: PreparedStatement[] = []

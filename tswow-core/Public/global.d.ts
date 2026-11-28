@@ -460,6 +460,17 @@ declare interface TSPlayer extends TSUnit, TSDBJsonProvider {
     /** ClassJob row of the player's FFXIV job: their class's own job, or the later job whose Soul of
      * <Job> they wear (FFXIV/Jobs/FFXIVJobSlot.h). 0 for a class outside the module. */
     GetFfxivJobId(): TSNumber<uint32>
+    /** Deals `potency` to `target` through the FFXIV pipeline (FFXIV/Combat/FFXIVActionDamage.h,
+     * script-owned potencies), logged as `spell`: a status's retaliation. Potency 0 takes `spell`'s
+     * own action damage row. Never hits the player or a friendly unit. Returns the damage dealt. */
+    DealFfxivPotencyDamage(target: TSUnit, spell: uint32, potency: uint32): TSNumber<uint32>
+    /** Heals `target` by `potency` through the FFXIV pipeline, logged as `spell` (a cure on every
+     * weaponskill, a regen tick). Potency 0 takes `spell`'s own cure row. Returns the HP the target
+     * actually recovered (no overheal). */
+    DealFfxivPotencyHeal(target: TSUnit, spell: uint32, potency: uint32): TSNumber<uint32>
+    /** The heal `potency` would be on `target`, nothing applied: a barrier "equivalent to a heal of
+     * 400 potency" (Stem the Tide) or a regen's tick written into its aura. */
+    GetFfxivPotencyHeal(target: TSUnit, spell: uint32, potency: uint32): TSNumber<uint32>
     /**
      * Returns all spells known by this player
      */

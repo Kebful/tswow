@@ -40,6 +40,13 @@ export class SQLCell<D extends CPrim, T extends SqlRow<any, any>> extends Cell<D
     }
 }
 
+export class SQLBigIntCell<T extends SqlRow<any, any>> extends SQLCell<bigint, T> {
+    get(): bigint {
+        const value = super.get();
+        return value == null ? value : BigInt(value);
+    }
+}
+
 export class SQLCellReadOnly<D extends CPrim, T extends SqlRow<any, any>> extends CellReadOnly<D, T> {
     protected name: string;
     constructor(owner: T, name: string) {
@@ -59,5 +66,12 @@ export class SQLCellReadOnly<D extends CPrim, T extends SqlRow<any, any>> extend
 
     get(): D {
         return SqlRow.getRowObj(this.owner)[this.name];
+    }
+}
+
+export class SQLBigIntCellReadOnly<T extends SqlRow<any, any>> extends SQLCellReadOnly<bigint, T> {
+    get(): bigint {
+        const value = super.get();
+        return value == null ? value : BigInt(value);
     }
 }

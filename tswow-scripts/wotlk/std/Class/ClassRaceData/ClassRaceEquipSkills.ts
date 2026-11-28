@@ -1,5 +1,6 @@
 import { CellSystem } from "../../../../data/cell/systems/CellSystem";
 import { SQL } from "../../../SQLFiles";
+import { classBit } from "../ClassMaskCell";
 import { ClassRacePair } from "./ClassRaces";
 
 const playerCreateInfos: {
@@ -17,8 +18,8 @@ SQL.playercreateinfo_skills.queryAll({})
         let classmask = x.classMask.get();
         let racemask = x.raceMask.get();
 
-        for(let i=0;i<31;++i) {
-            if(classmask === 0 || classmask&1<<i) {
+        for(let i=0;i<64;++i) {
+            if (!classmask || (classmask & classBit(i + 1))) {
                 classes.push(i+1)
             }
         }

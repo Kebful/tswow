@@ -103,8 +103,8 @@ void TSItemTemplate::SetInventoryType(uint32 value) {
     info->InventoryType = value;
     info->m_isDirty = true;
 };
-TSNumber<uint32> TSItemTemplate::GetAllowableClass() { return info->AllowableClass; };
-void TSItemTemplate::SetAllowableClass(uint32 value) {
+TSNumber<uint64> TSItemTemplate::GetAllowableClass() { return info->AllowableClass; };
+void TSItemTemplate::SetAllowableClass(uint64 value) {
     info->AllowableClass = value;
     info->m_isDirty = true;
 };

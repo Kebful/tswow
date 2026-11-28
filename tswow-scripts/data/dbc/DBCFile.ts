@@ -35,7 +35,7 @@ export class DBCFile<C, Q, R extends DBCRow<C, Q>> extends Table<C, Q, R> {
     protected buffer: DBCBuffer;
     protected rowMaker: DBCRowCreator<C, Q, R>;
 
-    constructor(name: string, rowMaker: DBCRowCreator<C, Q, R>) {
+    constructor(name: string, rowMaker: DBCRowCreator<C, Q, R>, private readonly classMaskColumns?: { legacyFields: number, fields: readonly number[] }) {
         super(name);
         this.rowMaker = rowMaker;
         this.buffer = new DBCBuffer();
@@ -163,7 +163,7 @@ export class DBCFile<C, Q, R extends DBCRow<C, Q>> extends Table<C, Q, R> {
 
     private load(filePath: string = this.defaultPath()) {
         if (!this.loaded) {
-            this.buffer.read(filePath);
+            this.buffer.read(filePath, this.classMaskColumns);
             this.loaded = true;
         }
     }

@@ -60,8 +60,8 @@ public:
     void SetSellPrice(uint32 value);
     TSNumber<uint32> GetInventoryType();
     void SetInventoryType(uint32 value);
-    TSNumber<uint32> GetAllowableClass();
-    void SetAllowableClass(uint32 value);
+    TSNumber<uint64> GetAllowableClass();
+    void SetAllowableClass(uint64 value);
     TSNumber<uint32> GetAllowableRace();
     void SetAllowableRace(uint32 value);
     TSNumber<uint32> GetItemLevel();

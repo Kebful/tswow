@@ -60,6 +60,13 @@ public:
 	// The job gauge itself is the livescript's (livescripts/job-resources/jobgauge.ts): the core has
 	// no gauge accessor, packet or value (FFXIV/Gauge/FFXIVJobGauge.h).
 	TSNumber<uint32> GetFfxivJobId();
+	// The FFXIV pipeline for a potency a livescript owns (a status's retaliation, a cure on every
+	// weaponskill, a barrier sized as a heal): FFXIV::Combat::*ScriptPotency* in
+	// FFXIV/Combat/FFXIVActionDamage.h. `spell` is the spell the hit/heal is logged under; potency 0
+	// takes that spell's own action row. Each returns the amount (0 = nothing applied).
+	TSNumber<uint32> DealFfxivPotencyDamage(TSUnit target, uint32 spell, uint32 potency);
+	TSNumber<uint32> DealFfxivPotencyHeal(TSUnit target, uint32 spell, uint32 potency);
+	TSNumber<uint32> GetFfxivPotencyHeal(TSUnit target, uint32 spell, uint32 potency);
 	TSDictionary<TSNumber<uint32>, TSPlayerSpell> GetSpellMap();
 	bool HasAtLoginFlag(uint32 flag);
 	bool HasQuestForGO(int32 entry);

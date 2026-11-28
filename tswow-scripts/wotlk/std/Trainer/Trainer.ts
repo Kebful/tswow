@@ -14,6 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
+import { ClassMaskCell } from "../Class/ClassMaskCell";
 import { Cell } from "../../../data/cell/cells/Cell";
 import { EnumCellTransform, makeEnumCell } from "../../../data/cell/cells/EnumCell";
 import { makeMaskCell32, MaskCellWrite } from "../../../data/cell/cells/MaskCell";
@@ -90,8 +91,8 @@ export class TrainerSpell extends MainEntity<trainer_spellRow> implements IClass
     get Cost() { return new MoneyCell(this, 'COPPER', this.row.MoneyCost); }
     get RequiredLevel() { return this.wrap(this.row.ReqLevel); }
 
-    get ClassMask(): MaskCellWrite<this,typeof ClassMask> {
-        return makeMaskCell32(ClassMask, this,this.wrapUnlock(this.row.classMask));
+    get ClassMask(): ClassMaskCell<this> {
+        return new ClassMaskCell(this, this.wrapUnlock(this.row.classMask));
     }
     get RaceMask(): MaskCellWrite<this,typeof RaceMask> {
         return makeMaskCell32(RaceMask, this,this.wrapUnlock(this.row.raceMask));
@@ -188,7 +189,7 @@ export class TrainerBase extends TransformedEntity<trainerRow,TrainerPlain> {
     get RequirementType() { return new TrainerRequirementType(this,this.row.Type); }
     get Spells() { return new TrainerSpells(this); }
     get ClassMask() {
-        return makeMaskCell32(ClassMask, this,this.row.classMask);
+        return new ClassMaskCell(this, this.row.classMask);
     }
     get RaceMask() {
         return makeMaskCell32(RaceMask, this,this.row.raceMask);

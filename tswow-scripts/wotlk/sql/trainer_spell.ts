@@ -17,7 +17,7 @@
 import { int, smallint, tinyint } from '../../data/primitives'
 import { Relation } from '../../data/query/Relations'
 import { PrimaryKey } from '../../data/table/PrimaryKey'
-import { SQLCell, SQLCellReadOnly } from '../../data/sql/SQLCell'
+import { SQLBigIntCell, SQLCell, SQLCellReadOnly } from '../../data/sql/SQLCell'
 import { SqlRow } from '../../data/sql/SQLRow'
 import { SqlTable } from '../../data/sql/SQLTable'
 
@@ -91,7 +91,7 @@ export class trainer_spellRow extends SqlRow<trainer_spellCreator,trainer_spellQ
     /**
      * Custom tswow field
      */
-    get classMask() { return new SQLCell<int,this>(this, 'classMask')}
+    get classMask() { return new SQLBigIntCell<this>(this, 'classMask')}
 
     /**
      * Creates a clone of this row with new primary keys.
@@ -118,7 +118,7 @@ export type trainer_spellCreator = {
     ReqLevel? : tinyint,
     VerifiedBuild? : smallint,
     raceMask?: int
-    classMask?: int
+    classMask?: bigint | number
 }
 
 /**
@@ -136,7 +136,7 @@ export type trainer_spellQuery = {
     ReqLevel? : Relation<tinyint>,
     VerifiedBuild? : Relation<smallint>,
     raceMask? : Relation<int>,
-    classMask? : Relation<int>,
+    classMask? : Relation<bigint | number>,
 }
 
 /**

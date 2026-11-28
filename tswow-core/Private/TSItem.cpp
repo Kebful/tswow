@@ -485,7 +485,7 @@ TSNumber<uint32> TSItem::GetInventoryType()
  *
  * @return uint32 allowableClass
  */
-TSNumber<uint32> TSItem::GetAllowableClass()
+TSNumber<uint64> TSItem::GetAllowableClass()
 {
     return item->GetTemplate()->AllowableClass;
 }

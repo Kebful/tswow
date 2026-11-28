@@ -139,7 +139,7 @@ export class DBCBuffer {
         buf1.copy(this.rows,offset2);
     }
 
-    read(file: string) {
+    read(file: string, classMasks?: { legacyFields: number, fields: readonly number[] }) {
         const buffer = fs.readFileSync(file);
         const rowCount = buffer.readInt32LE(4);
         const rowSize = buffer.readInt32LE(12);
@@ -149,10 +149,35 @@ export class DBCBuffer {
         this._baseRowCount = rowCount;
         this._rowSize = rowSize;
         this._fieldCount = buffer.readUInt32LE(8);
-        this.rows = Buffer.alloc(rowCount * rowSize);
+        if (classMasks) {
+            const { legacyFields, fields } = classMasks;
+            const wideFields = legacyFields + fields.length;
+            if (this._fieldCount === legacyFields && rowSize === legacyFields * 4) {
+                this._fieldCount = wideFields;
+                this._rowSize = wideFields * 4;
+            } else if (this._fieldCount !== wideFields || rowSize !== wideFields * 4) {
+                throw new Error(`Unexpected class-mask layout in ${file}`);
+            }
+        }
+        this.rows = Buffer.alloc(rowCount * this._rowSize);
         this.strings = Buffer.alloc(stringSize);
 
-        buffer.copy(this.rows, 0, 20, 20 + rowCount * rowSize);
+        if (classMasks && rowSize !== this._rowSize) {
+            for (let row = 0; row < rowCount; ++row) {
+                const start = 20 + row * rowSize;
+                let source = start;
+                let dest = row * this._rowSize;
+                for (const field of classMasks.fields) {
+                    const end = start + (field + 1) * 4;
+                    buffer.copy(this.rows, dest, source, end);
+                    dest += end - source + 4;
+                    source = end;
+                }
+                buffer.copy(this.rows, dest, source, start + rowSize);
+            }
+        } else {
+            buffer.copy(this.rows, 0, 20, 20 + rowCount * rowSize);
+        }
         buffer.copy(this.strings, 0, (rowCount * rowSize) + 20, buffer.length);
 
         this.strPtr = this.strings.length;

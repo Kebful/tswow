@@ -14,6 +14,7 @@
 * You should have received a copy of the GNU General Public License
 * along with this program. If not, see <https://www.gnu.org/licenses/>.
 */
+import { ClassMaskCell } from "../Class/ClassMaskCell";
 import { makeEnumCell } from "../../../data/cell/cells/EnumCell";
 import { makeMaskCell32 } from "../../../data/cell/cells/MaskCell";
 import { MulticastCell } from "../../../data/cell/cells/MulticastCell";
@@ -24,7 +25,6 @@ import { ItemRow } from "../../dbc/Item";
 import { DBC } from "../../DBCFiles";
 import { item_templateQuery, item_templateRow } from "../../sql/item_template";
 import { SQL } from "../../SQLFiles";
-import { ClassMask } from "../Class/ClassRegistry";
 import { EnchantmentRegistry } from "../Enchant/Enchantment";
 import { HolidayRegistry } from "../GameEvent/Holiday";
 import { CellBasic } from "../GameObject/ElevatorKeyframes";
@@ -170,7 +170,7 @@ export class ItemTemplate extends MainEntityID<item_templateRow> {
     get ItemLevel() { return this.wrap(this.row.ItemLevel); }
     get RequiredSpell() { return this.wrap(this.row.requiredspell); }
     get RequiredHonorRank() { return this.wrap(this.row.requiredhonorrank); }
-    get ClassMask() { return makeMaskCell32(ClassMask, this, this.row.AllowableClass, true); }
+    get ClassMask() { return new ClassMaskCell(this, this.row.AllowableClass, true); }
     get RaceMask() { return makeMaskCell32(RaceMask, this, this.row.AllowableRace, true); }
     get MaxCount() { return this.wrap(this.row.maxcount); }
     get MaxStack() { return this.wrap(this.row.stackable); }
@@ -309,7 +309,7 @@ export class ItemTemplate extends MainEntityID<item_templateRow> {
             code.non_zero_enum('Quality',this.Quality)
 
             code.non_zero_bitmask('BagFamily',this.BagFamily)
-            if(this.ClassMask.get() !== 0xffffffff)
+            if(this.ClassMask.get() !== BigInt.asUintN(64, BigInt(-1)))
             {
                 code.non_zero_bitmask('ClassMask',this.ClassMask)
             }

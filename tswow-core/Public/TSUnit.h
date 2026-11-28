@@ -118,7 +118,7 @@ public:
     TSNumber<uint32> GetRace();
     TSNumber<uint32> GetClass();
     TSNumber<uint32> GetRaceMask();
-    TSNumber<uint32> GetClassMask();
+    TSNumber<uint64> GetClassMask();
     TSNumber<uint32> GetCreatureType();
     std::string GetClassAsString(uint8 locale);
     std::string GetRaceAsString(uint8 locale);

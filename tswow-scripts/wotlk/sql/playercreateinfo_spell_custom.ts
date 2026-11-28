@@ -17,7 +17,7 @@
 import { int, mediumint, varchar } from '../../data/primitives'
 import { Relation } from '../../data/query/Relations'
 import { PrimaryKey } from '../../data/table/PrimaryKey'
-import { SQLCell, SQLCellReadOnly } from '../../data/sql/SQLCell'
+import { SQLBigIntCellReadOnly, SQLCell, SQLCellReadOnly } from '../../data/sql/SQLCell'
 import { SqlRow } from '../../data/sql/SQLRow'
 import { SqlTable } from '../../data/sql/SQLTable'
 
@@ -41,7 +41,7 @@ export class playercreateinfo_spell_customRow extends SqlRow<playercreateinfo_sp
      * No comment (yet!)
      */
     @PrimaryKey()
-    get classmask() {return new SQLCellReadOnly<int, this>(this, 'classmask')}
+    get classmask() {return new SQLBigIntCellReadOnly<this>(this, 'classmask')}
 
     /**
      * Primary Key
@@ -61,7 +61,7 @@ export class playercreateinfo_spell_customRow extends SqlRow<playercreateinfo_sp
      *
      * Cloned rows are automatically added to the SQL table.
      */
-    clone(racemask : int,clsmask : int,Spell : mediumint, c? : playercreateinfo_spell_customCreator) : this {
+    clone(racemask : int,clsmask : bigint | number,Spell : mediumint, c? : playercreateinfo_spell_customCreator) : this {
         return this.cloneInternal([racemask,clsmask,Spell],c)
     }
 }
@@ -71,7 +71,7 @@ export class playercreateinfo_spell_customRow extends SqlRow<playercreateinfo_sp
  */
 export type playercreateinfo_spell_customCreator = {
     racemask? : int,
-    classmask? : int,
+    classmask? : bigint | number,
     Spell? : mediumint,
     Note? : varchar,
 }
@@ -81,7 +81,7 @@ export type playercreateinfo_spell_customCreator = {
  */
 export type playercreateinfo_spell_customQuery = {
     racemask? : Relation<int>,
-    classmask? : Relation<int>,
+    classmask? : Relation<bigint | number>,
     Spell? : Relation<mediumint>,
     Note? : Relation<varchar>,
 }
@@ -94,7 +94,7 @@ export class playercreateinfo_spell_customTable extends SqlTable<
     playercreateinfo_spell_customCreator,
     playercreateinfo_spell_customQuery,
     playercreateinfo_spell_customRow> {
-    add(racemask : int,clsmask : int,Spell : mediumint, c? : playercreateinfo_spell_customCreator) : playercreateinfo_spell_customRow {
+    add(racemask : int,clsmask : bigint | number,Spell : mediumint, c? : playercreateinfo_spell_customCreator) : playercreateinfo_spell_customRow {
         const first = this.first();
         if(first) return first.clone(racemask,clsmask,Spell,c)
         else return this.rowCreator(this, {}).clone(racemask,clsmask,Spell,c)

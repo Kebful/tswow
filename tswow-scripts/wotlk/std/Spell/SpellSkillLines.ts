@@ -14,6 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
+import { ClassMaskCell, ClassMaskInput, makeClassMask } from "../Class/ClassMaskCell";
 import { makeEnumCell } from "../../../data/cell/cells/EnumCell";
 import { makeMask, makeMaskCell32, MaskCellWrite, MaskCon } from "../../../data/cell/cells/MaskCell";
 import { CellSystem } from "../../../data/cell/systems/CellSystem";
@@ -22,7 +23,6 @@ import { Table } from "../../../data/table/Table";
 import { SkillLineAbilityQuery, SkillLineAbilityRow } from "../../dbc/SkillLineAbility";
 import { DBC } from "../../DBCFiles";
 import { ClassRaceMaskEntry } from "../Class/ClassRaceData/ClassRaceMaskSystem";
-import { ClassMask } from "../Class/ClassRegistry";
 import { DynamicIDGenerator, Ids } from "../Misc/Ids";
 import { RaceMask } from "../Race/RaceType";
 import { RegistryDynamic } from "../Refs/Registry";
@@ -47,15 +47,15 @@ export enum AcquireMethod {
 }
 
 export class SkillLineAbility extends ClassRaceMaskEntry<SkillLineAbilityRow> {
-    get ClassMask(): MaskCellWrite<this,typeof ClassMask> {
-        return makeMaskCell32(ClassMask, this, this.row.ClassMask);
+    get ClassMask(): ClassMaskCell<this> {
+        return new ClassMaskCell(this, this.row.ClassMask);
     }
     get RaceMask(): MaskCellWrite<this,typeof RaceMask> {
         return makeMaskCell32(RaceMask, this, this.row.RaceMask);
     }
     get ID() { return this.row.ID.get(); }
     get ClassMaskForbidden() {
-        return makeMaskCell32(ClassMask, this, this.row.ClassMaskForbidden);
+        return new ClassMaskCell(this, this.row.ClassMaskForbidden);
     }
     get MinSkillRank() { return this.wrap(this.row.MinSkillLineRank); }
 
@@ -89,7 +89,7 @@ export class SpellSkillLineAbilites extends MultiRowSystem<SkillLineAbility,Spel
         super(owner);
     }
 
-    enable(cls: MaskCon<keyof typeof ClassMask>, race: MaskCon<keyof typeof RaceMask>) {
+    enable(cls: ClassMaskInput, race: MaskCon<keyof typeof RaceMask>) {
         let skills: number[] = []
 
         this.forEach(x=>{
@@ -110,7 +110,7 @@ export class SpellSkillLineAbilites extends MultiRowSystem<SkillLineAbility,Spel
         })
     }
 
-    clearClass(cls: MaskCon<keyof typeof ClassMask>) {
+    clearClass(cls: ClassMaskInput) {
         this.forEach(x=>{
             x.ClassMask.set(cls,'NOT')
         })
@@ -126,7 +126,7 @@ export class SpellSkillLineAbilites extends MultiRowSystem<SkillLineAbility,Spel
 
     add(
           skillLine: number
-        , classes?: MaskCon<keyof typeof ClassMask>
+        , classes?: ClassMaskInput
         , races?: MaskCon<keyof typeof RaceMask>
     ) {
         this.addGet(skillLine,classes,races)
@@ -135,7 +135,7 @@ export class SpellSkillLineAbilites extends MultiRowSystem<SkillLineAbility,Spel
 
     addMod(
         skillLine: number
-      , classes: MaskCon<keyof typeof ClassMask>
+      , classes: ClassMaskInput
       , races: MaskCon<keyof typeof RaceMask>
       , callback: (sla: SkillLineAbility)=>void = ()=>{}
       )
@@ -146,13 +146,13 @@ export class SpellSkillLineAbilites extends MultiRowSystem<SkillLineAbility,Spel
 
     addGet(
           skillLine: number = 0
-        , classes?: MaskCon<keyof typeof ClassMask>
+        , classes?: ClassMaskInput
         , races?: MaskCon<keyof typeof RaceMask>
     ) {
         let row = DBC.SkillLineAbility.add(Ids.SkillLineAbility.id())
         let sla = new SkillLineAbility(row
             .SkillLine.set(skillLine)
-            .ClassMask.set(makeMask(ClassMask,classes))
+            .ClassMask.set(makeClassMask(classes))
             .RaceMask.set(makeMask(RaceMask,races))
             .Spell.set(this.owner.ID));
         return sla;

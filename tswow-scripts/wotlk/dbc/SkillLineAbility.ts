@@ -17,7 +17,7 @@
 import { int, uint } from '../../data/primitives'
 import { Relation } from '../../data/query/Relations'
 import { PrimaryKey } from '../../data/table/PrimaryKey'
-import { DBCKeyCell, DBCMaskCell, DBCUIntArrayCell, DBCUIntCell } from '../../data/dbc/DBCCell'
+import { DBCClassMaskCell, DBCKeyCell, DBCMaskCell, DBCUIntArrayCell, DBCUIntCell } from '../../data/dbc/DBCCell'
 import { DBCFile } from '../../data/dbc/DBCFile'
 import { DBCRow } from '../../data/dbc/DBCRow'
 
@@ -53,47 +53,47 @@ export class SkillLineAbilityRow extends DBCRow<SkillLineAbilityCreator,SkillLin
     /**
      * No comment (yet!)
      */
-    get ClassMask() { return new DBCMaskCell(this,this.buffer,this.offset+16)}
+    get ClassMask() { return new DBCClassMaskCell(this,this.buffer,this.offset+16)}
 
     /**
      * No comment (yet!)
      */
-    get RaceMaskForbidden() { return new DBCMaskCell(this,this.buffer,this.offset+20)}
+    get RaceMaskForbidden() { return new DBCMaskCell(this,this.buffer,this.offset+24)}
 
     /**
      * No comment (yet!)
      */
-    get ClassMaskForbidden() { return new DBCMaskCell(this,this.buffer,this.offset+24)}
+    get ClassMaskForbidden() { return new DBCClassMaskCell(this,this.buffer,this.offset+28)}
 
     /**
      * No comment (yet!)
      */
-    get MinSkillLineRank() { return new DBCUIntCell(this,this.buffer,this.offset+28)}
+    get MinSkillLineRank() { return new DBCUIntCell(this,this.buffer,this.offset+36)}
 
     /**
      * No comment (yet!)
      */
-    get SupercededBySpell() { return new DBCUIntCell(this,this.buffer,this.offset+32)}
+    get SupercededBySpell() { return new DBCUIntCell(this,this.buffer,this.offset+40)}
 
     /**
      * No comment (yet!)
      */
-    get AcquireMethod() { return new DBCUIntCell(this,this.buffer,this.offset+36)}
+    get AcquireMethod() { return new DBCUIntCell(this,this.buffer,this.offset+44)}
 
     /**
      * No comment (yet!)
      */
-    get TrivialSkillLineRankHigh() { return new DBCUIntCell(this,this.buffer,this.offset+40)}
+    get TrivialSkillLineRankHigh() { return new DBCUIntCell(this,this.buffer,this.offset+48)}
 
     /**
      * No comment (yet!)
      */
-    get TrivialSkillLineRankLow() { return new DBCUIntCell(this,this.buffer,this.offset+44)}
+    get TrivialSkillLineRankLow() { return new DBCUIntCell(this,this.buffer,this.offset+52)}
 
     /**
      * No comment (yet!)
      */
-    get CharacterPoints() { return new DBCUIntArrayCell(this,2,this.buffer,this.offset+48)}
+    get CharacterPoints() { return new DBCUIntArrayCell(this,2,this.buffer,this.offset+56)}
 
     /**
      * Creates a clone of this row with new primary keys.
@@ -112,9 +112,9 @@ export type SkillLineAbilityCreator = {
     SkillLine?: uint
     Spell?: uint
     RaceMask?: uint
-    ClassMask?: uint
+    ClassMask?: bigint | number
     RaceMaskForbidden?: uint
-    ClassMaskForbidden?: uint
+    ClassMaskForbidden?: bigint | number
     MinSkillLineRank?: uint
     SupercededBySpell?: uint
     AcquireMethod?: uint
@@ -131,9 +131,9 @@ export type SkillLineAbilityQuery = {
     SkillLine? : Relation<uint>
     Spell? : Relation<uint>
     RaceMask? : Relation<uint>
-    ClassMask? : Relation<uint>
+    ClassMask? : Relation<bigint | number>
     RaceMaskForbidden? : Relation<uint>
-    ClassMaskForbidden? : Relation<uint>
+    ClassMaskForbidden? : Relation<bigint | number>
     MinSkillLineRank? : Relation<uint>
     SupercededBySpell? : Relation<uint>
     AcquireMethod? : Relation<uint>
@@ -151,7 +151,7 @@ export class SkillLineAbilityDBCFile extends DBCFile<
     SkillLineAbilityQuery,
     SkillLineAbilityRow> {
     constructor() {
-        super('SkillLineAbility',(t,b,o)=>new SkillLineAbilityRow(t,b,o))
+        super('SkillLineAbility',(t,b,o)=>new SkillLineAbilityRow(t,b,o), { legacyFields: 14, fields: [4, 6] })
     }
     /** Loads a new SkillLineAbility.dbc from a file. */
     static read(path: string): SkillLineAbilityDBCFile {

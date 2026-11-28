@@ -17,7 +17,7 @@
 import { int, smallint, varchar } from '../../data/primitives'
 import { Relation } from '../../data/query/Relations'
 import { PrimaryKey } from '../../data/table/PrimaryKey'
-import { SQLCell, SQLCellReadOnly } from '../../data/sql/SQLCell'
+import { SQLBigIntCellReadOnly, SQLCell, SQLCellReadOnly } from '../../data/sql/SQLCell'
 import { SqlRow } from '../../data/sql/SQLRow'
 import { SqlTable } from '../../data/sql/SQLTable'
 
@@ -41,7 +41,7 @@ export class playercreateinfo_skillsRow extends SqlRow<playercreateinfo_skillsCr
      * No comment (yet!)
      */
     @PrimaryKey()
-    get classMask() {return new SQLCellReadOnly<int, this>(this, 'classMask')}
+    get classMask() {return new SQLBigIntCellReadOnly<this>(this, 'classMask')}
 
     /**
      * Primary Key
@@ -66,7 +66,7 @@ export class playercreateinfo_skillsRow extends SqlRow<playercreateinfo_skillsCr
      *
      * Cloned rows are automatically added to the SQL table.
      */
-    clone(raceMask : int,clsMask : int,skill : smallint, c? : playercreateinfo_skillsCreator) : this {
+    clone(raceMask : int,clsMask : bigint | number,skill : smallint, c? : playercreateinfo_skillsCreator) : this {
         return this.cloneInternal([raceMask,clsMask,skill],c)
     }
 }
@@ -76,7 +76,7 @@ export class playercreateinfo_skillsRow extends SqlRow<playercreateinfo_skillsCr
  */
 export type playercreateinfo_skillsCreator = {
     raceMask? : int,
-    classMask? : int,
+    classMask? : bigint | number,
     skill? : smallint,
     rank? : smallint,
     comment? : varchar,
@@ -87,7 +87,7 @@ export type playercreateinfo_skillsCreator = {
  */
 export type playercreateinfo_skillsQuery = {
     raceMask? : Relation<int>,
-    classMask? : Relation<int>,
+    classMask? : Relation<bigint | number>,
     skill? : Relation<smallint>,
     rank? : Relation<smallint>,
     comment? : Relation<varchar>,
@@ -101,7 +101,7 @@ export class playercreateinfo_skillsTable extends SqlTable<
     playercreateinfo_skillsCreator,
     playercreateinfo_skillsQuery,
     playercreateinfo_skillsRow> {
-    add(raceMask : int,clsMask : int,skill : smallint, c? : playercreateinfo_skillsCreator) : playercreateinfo_skillsRow {
+    add(raceMask : int,clsMask : bigint | number,skill : smallint, c? : playercreateinfo_skillsCreator) : playercreateinfo_skillsRow {
         const first = this.first();
         if(first) return first.clone(raceMask,clsMask,skill,c)
         else return this.rowCreator(this, {}).clone(raceMask,clsMask,skill,c)

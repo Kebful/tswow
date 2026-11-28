@@ -1,8 +1,8 @@
+import { ClassMaskCell, ClassMaskInput } from "../Class/ClassMaskCell";
 import { makeMaskCell32, MaskCellWrite, MaskCon } from "../../../data/cell/cells/MaskCell";
 import { SkillRaceClassInfoRow } from "../../dbc/SkillRaceClassInfo";
 import { DBC } from "../../DBCFiles";
 import { ClassRaceMaskEntry, ClassRaceMaskSystem } from "../Class/ClassRaceData/ClassRaceMaskSystem";
-import { ClassMask } from "../Class/ClassRegistry";
 import { Ids } from "../Misc/Ids";
 import { RaceMask } from "../Race/RaceType";
 import { SkillLine } from "./SkillLine";
@@ -14,8 +14,8 @@ export enum SkillRaceClassFlags {
 }
 
 export class SkillRaceClassInfo extends ClassRaceMaskEntry<SkillRaceClassInfoRow> {
-    get ClassMask(): MaskCellWrite<this,typeof ClassMask> {
-        return makeMaskCell32(ClassMask, this,this.wrapUnlock(this.row.ClassMask));
+    get ClassMask(): ClassMaskCell<this> {
+        return new ClassMaskCell(this, this.row.ClassMask);
     }
     get RaceMask(): MaskCellWrite<this,typeof RaceMask> {
         // hack
@@ -31,7 +31,7 @@ export class SkillRaceClassInfo extends ClassRaceMaskEntry<SkillRaceClassInfoRow
 }
 
 export class SkillRaceClassInfos extends ClassRaceMaskSystem<SkillRaceClassInfo,SkillRaceClassInfoRow,SkillLine> {
-    protected _addGet(classmask: number, racemask: number): SkillRaceClassInfo {
+    protected _addGet(classmask: bigint, racemask: number): SkillRaceClassInfo {
         const id = Ids.SkillRaceClassInfo.id();
         const row = DBC.SkillRaceClassInfo.add(id);
         row.SkillID.set(this.owner.ID);
@@ -48,7 +48,7 @@ export class SkillRaceClassInfos extends ClassRaceMaskSystem<SkillRaceClassInfo,
     }
 
     add(
-          classes: MaskCon<keyof typeof ClassMask> = 0xffffffff
+          classes: ClassMaskInput = 0xffffffff
         , races: MaskCon<keyof typeof RaceMask> = 0xffffffff
     ) {
         this.addGet(classes,races);

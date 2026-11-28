@@ -18,7 +18,7 @@
 /**
  * Describes the permitted final types checked in a relation
  */
-export type Primitive = string|number|boolean;
+export type Primitive = string|number|boolean|bigint;
 
 /**
  * Describes the most arbitrary form of a relation
@@ -44,6 +44,11 @@ export function inMemoryRelation(value: any, relation: Relation<any>) {
     if (isNonPrimitive(relation)) {
         return relation.inMemory(value);
     } else {
+        if (typeof relation === 'bigint' || typeof value === 'bigint') {
+            return typeof relation === 'bigint'
+                ? new BigIntRelation(relation, true).inMemory(value)
+                : new BigIntRelation(value, true).inMemory(relation);
+        }
         return value === relation;
     }
 }
@@ -82,6 +87,22 @@ abstract class ValueRelationBase<T extends Primitive> extends RelationBase {
      * Returns the value of this relation.
      */
     abstract getValue(): T;
+}
+
+class BigIntRelation extends RelationBase {
+    constructor(private value: bigint, private equal: boolean) {
+        super();
+    }
+
+    toSql(key: string) {
+        return `${key} ${this.equal ? '=' : '<>'} ${this.value}`;
+    }
+
+    inMemory(value: unknown) {
+        const matches = (typeof value === 'bigint' || (typeof value === 'number' && Number.isSafeInteger(value)))
+            && BigInt(value) === this.value;
+        return this.equal === matches;
+    }
 }
 
 /**
@@ -383,6 +404,8 @@ export const all = <T extends Primitive>(...values: Relation<T>[]) => new AllRel
  */
 export const neq = <T extends Primitive>(value: T) => {
     switch (typeof(value)) {
+        case 'bigint':
+            return new BigIntRelation(value, false);
         case 'string':
             return new StrNeq(value, false);
         case 'number':
@@ -475,6 +498,8 @@ export const includes = (value: string, caseSensitive: boolean = false) => new I
  */
 export const eq = <T extends Primitive>(value: T) => {
     switch (typeof(value)) {
+        case 'bigint':
+            return new BigIntRelation(value, true);
         case 'string':
             return streq(value);
         case 'number':

@@ -184,6 +184,16 @@ export class MultiIntWrapper<T> extends MultiWrapper<T> {
     }
 }
 
+export class DBCClassMaskCell<T> extends DBCCell<bigint, T> {
+    get(): bigint {
+        return this.buffer.readulong(this.offset);
+    }
+    set(value: number | bigint): T {
+        this.buffer.writeulong(BigInt.asUintN(64, BigInt(value)), this.offset);
+        return this.owner;
+    }
+}
+
 export class DBCIntCell<T> extends DBCCell<number, T> {
     get(): number {
         return this.buffer.readint(this.offset);

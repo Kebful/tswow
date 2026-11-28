@@ -17,7 +17,7 @@
 import { int } from '../../data/primitives'
 import { Relation } from '../../data/query/Relations'
 import { PrimaryKey } from '../../data/table/PrimaryKey'
-import { SQLCell, SQLCellReadOnly } from '../../data/sql/SQLCell'
+import { SQLBigIntCellReadOnly, SQLCell, SQLCellReadOnly } from '../../data/sql/SQLCell'
 import { SqlRow } from '../../data/sql/SQLRow'
 import { SqlTable } from '../../data/sql/SQLTable'
 
@@ -49,7 +49,7 @@ export class spell_autolearnRow extends SqlRow<spell_autolearnCreator,spell_auto
      * No comment (yet!)
      */
     @PrimaryKey()
-    get classmask() {return new SQLCellReadOnly<int, this>(this, 'classmask')}
+    get classmask() {return new SQLBigIntCellReadOnly<this>(this, 'classmask')}
 
     /**
      * No comment (yet!)
@@ -61,7 +61,7 @@ export class spell_autolearnRow extends SqlRow<spell_autolearnCreator,spell_auto
      *
      * Cloned rows are automatically added to the SQL table.
      */
-    clone(spell: int, racemask : int,clsmask : int, c? : spell_autolearnCreator) : this {
+    clone(spell: int, racemask : int,clsmask : bigint | number, c? : spell_autolearnCreator) : this {
         return this.cloneInternal([spell,racemask,clsmask],c)
     }
 }
@@ -72,7 +72,7 @@ export class spell_autolearnRow extends SqlRow<spell_autolearnCreator,spell_auto
 export type spell_autolearnCreator = {
     spell?: int,
     racemask?: int,
-    classmask?: int,
+    classmask?: bigint | number,
     level?: int,
 }
 
@@ -82,7 +82,7 @@ export type spell_autolearnCreator = {
 export type spell_autolearnQuery = {
     spell? : Relation<int>,
     racemask? : Relation<int>,
-    classmask? : Relation<int>,
+    classmask? : Relation<bigint | number>,
     level? : Relation<int>,
 }
 
@@ -94,7 +94,7 @@ export class spell_autolearnTable extends SqlTable<
     spell_autolearnCreator,
     spell_autolearnQuery,
     spell_autolearnRow> {
-    add(spell: int, racemask : int,clsmask : int, c? : spell_autolearnCreator) : spell_autolearnRow {
+    add(spell: int, racemask : int,clsmask : bigint | number, c? : spell_autolearnCreator) : spell_autolearnRow {
         const first = this.first();
         if(first) return first.clone(spell, racemask,clsmask,c)
         else return this.rowCreator(this, {}).clone(spell,racemask,clsmask,c)

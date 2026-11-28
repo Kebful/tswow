@@ -22,6 +22,8 @@ import { ChrClassesRow } from "../../dbc/ChrClasses";
 import { DBC } from "../../DBCFiles";
 import { LUAXML } from "../../luaxml/LUAXML";
 import { findGaps } from "../GapDetection/GapDetection";
+import { Ids } from "../Misc/Ids";
+import { classBit } from "./ClassMaskCell";
 import { MainEntityID } from "../Misc/Entity";
 import { ClassRaces } from "./ClassRaceData/ClassRaces";
 import { ClassRoles } from "./ClassRoles";
@@ -59,7 +61,7 @@ export class Class extends MainEntityID<ChrClassesRow> {
     get Inventory() { return new ClassStartInventory(this); }
     get Filename() { return this.row.Filename.get(); }
     get ID() { return this.row.ID.get(); }
-    get Mask() { return 1<<(this.ID-1) }
+    get Mask() { return classBit(this.ID); }
     get Stats() { return new ClassStats(this); }
     get Name() { return this.wrapLoc(this.row.Name); }
     get Flags() { return this.wrap(this.row.Flags); }
@@ -73,6 +75,17 @@ export class Class extends MainEntityID<ChrClassesRow> {
 }
 
 
+const reservedClassIds = new Set([10]); // unused stock slot
+
+export function reserveClassId(mod: string, key: string, classId: number) {
+    classBit(classId);
+    const assigned = Ids.Class.id(mod, key, classId);
+    if (assigned !== classId) {
+        throw new Error(`Class reservation ${mod}:${key} allocated ${assigned}, expected ${classId}`);
+    }
+    reservedClassIds.add(classId);
+}
+
 sort('ChrClasses', ()=>{
     if(BuildArgs.READ_ONLY) return; // <-- class gaps are valid if we're in readonly mode
 
@@ -83,7 +96,13 @@ sort('ChrClasses', ()=>{
         , 'ChrClasses'
         , 0
         , DBC.ChrClasses.queryAll({}).map(x=>x.ID.get())
-        , (cur,last)=>cur===11&&last===9
+        , (cur,last)=>{
+            if (cur <= last) return false;
+            for (let id = last + 1; id < cur; id++) {
+                if (!reservedClassIds.has(id)) return false;
+            }
+            return true;
+        }
     )
 })
 

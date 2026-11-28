@@ -1012,7 +1012,7 @@ TSNumber<uint32> TSUnit::GetRaceMask()
 *
 * @return uint32 classmask
 */
-TSNumber<uint32> TSUnit::GetClassMask()
+TSNumber<uint64> TSUnit::GetClassMask()
 {
 #ifdef TRINITY
     return unit->GetClassMask();

@@ -69,7 +69,7 @@ public:
     TSNumber<uint32> GetBuyPrice();
     TSNumber<uint32> GetSellPrice();
     TSNumber<uint32> GetInventoryType();
-    TSNumber<uint32> GetAllowableClass();
+    TSNumber<uint64> GetAllowableClass();
     TSNumber<uint32> GetAllowableRace();
     TSNumber<uint32> GetItemLevel();
     TSNumber<uint32> GetRequiredLevel();

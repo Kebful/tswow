@@ -269,6 +269,7 @@ export function InstallPath(pathIn: string, tdb: string) {
             typescript_js: file('typescript/lib/tsc'),
             tstl_decorators: file('typescript-to-lua/dist/transformation/visitors/class/decorators.js'),
             tstl_js: file('typescript-to-lua/dist/tstl.js'),
+            tstl_language_extensions: file('typescript-to-lua/language-extensions/index.d.ts'),
             wow: dir({
                 data: dir({
                     index: file('index.js')

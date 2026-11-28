@@ -1,16 +1,16 @@
+import { ClassMaskCell } from "../Class/ClassMaskCell";
 import { makeMaskCell32, MaskCellWrite } from "../../../data/cell/cells/MaskCell";
 import { BuildArgs } from "../../../data/Settings";
 import { SqlRow } from "../../../data/sql/SQLRow";
 import { playercreateinfo_skillsRow } from "../../sql/playercreateinfo_skills";
 import { SQL } from "../../SQLFiles";
 import { ClassRaceMaskEntry, ClassRaceMaskSystem } from "../Class/ClassRaceData/ClassRaceMaskSystem";
-import { ClassMask } from "../Class/ClassRegistry";
 import { RaceMask } from "../Race/RaceType";
 import { SkillLineRegistry } from "./SkillLines";
 
 // Always rewrite this table entirely so masks work
 if(BuildArgs.WRITE_SERVER) {
-    SQL.Databases.world_dest.read(`DELETE from \`playercreateinfo_skills\`;`)
+    SQL.Databases.world_dest.writeEarly(`DELETE from \`playercreateinfo_skills\`;`)
 }
 SQL.playercreateinfo_skills.queryAll({})
     .forEach(x=>{
@@ -19,8 +19,8 @@ SQL.playercreateinfo_skills.queryAll({})
 
 export class SkillAutolearn extends ClassRaceMaskEntry<playercreateinfo_skillsRow>
 {
-    get ClassMask(): MaskCellWrite<this,typeof ClassMask> {
-        return makeMaskCell32(ClassMask, this,this.wrapUnlock(this.row.classMask));
+    get ClassMask(): ClassMaskCell<this> {
+        return new ClassMaskCell(this, this.wrapUnlock(this.row.classMask));
     }
     get RaceMask(): MaskCellWrite<this,typeof RaceMask> {
         return makeMaskCell32(RaceMask, this,this.wrapUnlock(this.row.raceMask));
@@ -39,7 +39,7 @@ export class SkillsAutolearn<T> extends ClassRaceMaskSystem<SkillAutolearn,playe
         super(owner);
         this.skill = skill;
     }
-    protected _addGet(classmask: number, racemask: number): SkillAutolearn {
+    protected _addGet(classmask: bigint, racemask: number): SkillAutolearn {
         return new SkillAutolearn(
             SQL.playercreateinfo_skills.add(racemask,classmask,this.skill)
                 .rank.set(0)

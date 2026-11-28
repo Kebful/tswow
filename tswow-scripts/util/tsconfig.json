@@ -9,7 +9,11 @@
     "skipLibCheck": true,                     /* Skip type checking of declaration files. */
     "sourceMap": true,
     "forceConsistentCasingInFileNames": true,  /* Disallow inconsistently-cased references to the same file. */
-    "experimentalDecorators": true
+    "experimentalDecorators": true,
+    /* Node globals (fs, process, exports) are requested explicitly: automatic @types
+       inclusion is not reliable under newer TypeScript versions, which then report
+       "Cannot find name 'process'" in the editor while the pinned tsc builds fine. */
+    "types": ["node"]
   },
   "include":["./"],
 }

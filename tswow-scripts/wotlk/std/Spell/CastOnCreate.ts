@@ -1,10 +1,10 @@
+import { ClassMaskCell } from "../Class/ClassMaskCell";
 import { makeMaskCell32, MaskCellWrite } from "../../../data/cell/cells/MaskCell";
 import { Transient } from "../../../data/cell/serialization/Transient";
 import { finish } from "../../../data/index";
 import { BuildArgs } from "../../../data/Settings";
 import { SQL } from "../../SQLFiles";
 import { ClassRaceMaskEntry, ClassRaceMaskSystem } from "../Class/ClassRaceData/ClassRaceMaskSystem";
-import { ClassMask } from "../Class/ClassRegistry";
 import { CellBasic } from "../GameObject/ElevatorKeyframes";
 import { IDeletable } from "../Misc/Entity";
 import { RaceMask } from "../Race/RaceType";
@@ -12,7 +12,7 @@ import { SpellRegistry } from "./Spells";
 
 interface CastSpellRow extends IDeletable {
     raceMask : number
-    classMask : number
+    classMask : bigint
     spell : number
     note: string
     deleted: boolean
@@ -20,7 +20,7 @@ interface CastSpellRow extends IDeletable {
 
 let values: CastSpellRow[] = SQL.Databases.world_source
     .read(`SELECT * from \`playercreateinfo_cast_spell\`;`)
-SQL.Databases.world_dest.read(`DELETE FROM \`playercreateinfo_cast_spell\`;`)
+if (BuildArgs.WRITE_SERVER) SQL.Databases.world_dest.writeEarly(`DELETE FROM \`playercreateinfo_cast_spell\`;`)
 
 finish('playercreateinfo_cast_spell',()=>{
     if(BuildArgs.READ_ONLY) return;
@@ -36,8 +36,8 @@ finish('playercreateinfo_cast_spell',()=>{
 export class CastSpell extends ClassRaceMaskEntry<CastSpellRow> {
     get Spell() {
         return SpellRegistry.ref(this
-            , new CellBasic(this,()=>this.row.classMask,(v)=>{
-                this.row.raceMask = v;
+            , new CellBasic(this,()=>this.row.spell,(v)=>{
+                this.row.spell = v;
                 return this;
             })
         )
@@ -48,9 +48,9 @@ export class CastSpell extends ClassRaceMaskEntry<CastSpellRow> {
             return this;
         })
     }
-    get ClassMask(): MaskCellWrite<this,typeof ClassMask> {
+    get ClassMask(): ClassMaskCell<this> {
         // hack
-        return makeMaskCell32(ClassMask, this, new CellBasic(this,
+        return new ClassMaskCell(this, new CellBasic(this,
             ()=>this.row.classMask,
             (value)=>{
                 this.row.classMask = value; return this;
@@ -76,7 +76,7 @@ export class CastSpells<T> extends ClassRaceMaskSystem<CastSpell,CastSpellRow,T>
         this.spell = spell;
     }
 
-    protected _addGet(classMask: number, raceMask: number): CastSpell {
+    protected _addGet(classMask: bigint, raceMask: number): CastSpell {
         let v: CastSpellRow = {
               classMask
             , raceMask

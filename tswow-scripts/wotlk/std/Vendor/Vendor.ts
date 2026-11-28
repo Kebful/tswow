@@ -14,12 +14,12 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
+import { ClassMaskCell } from "../Class/ClassMaskCell";
 import { makeMaskCell32 } from "../../../data/cell/cells/MaskCell";
 import { CellSystemTop } from "../../../data/cell/systems/CellSystem";
 import { MultiRowSystem } from "../../../data/cell/systems/MultiRowSystem";
 import { npc_vendorRow } from "../../sql/npc_vendor";
 import { SQL } from "../../SQLFiles";
-import { ClassMask } from "../Class/ClassRegistry";
 import { CreatureTemplateRegistry } from "../Creature/Creatures";
 import { ExtendedCostRegistry } from "../ExtendedCost/ExtendedCost";
 import { ItemTemplateRegistry } from "../Item/ItemTemplate";
@@ -44,7 +44,7 @@ export class VendorItem extends MainEntity<npc_vendorRow> {
     }
 
     get ClassMask() {
-        return makeMaskCell32(ClassMask, this, this.row.classMask)
+        return new ClassMaskCell(this, this.row.classMask)
     }
 
     get RaceMask() {

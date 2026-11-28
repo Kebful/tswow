@@ -47,6 +47,10 @@
 #include "Player.h"
 #include "ArenaTeam.h"
 #include "SpellMgr.h"
+#include "FFXIV/Combat/FFXIVActionDamage.h"
+
+#include <algorithm>
+#include <limits>
 #include "GuildMgr.h"
 #include "AccountMgr.h"
 #include "AuctionHouseMgr.h"
@@ -181,6 +185,30 @@ TSNumber<uint32> TSPlayer::GetClassSwitchSpellId()
 TSNumber<uint32> TSPlayer::GetFfxivJobId()
 {
     return player->GetFFXIVStats().jobId;
+}
+
+TSNumber<uint32> TSPlayer::DealFfxivPotencyDamage(TSUnit target, uint32 spell, uint32 potency)
+{
+    if (!target.unit)
+        return 0;
+    int64 const dealt = FFXIV::Combat::DealFfxivScriptPotencyDamage(*player, *target.unit, spell, int32(potency));
+    return uint32(std::clamp<int64>(dealt, 0, std::numeric_limits<uint32>::max()));
+}
+
+TSNumber<uint32> TSPlayer::DealFfxivPotencyHeal(TSUnit target, uint32 spell, uint32 potency)
+{
+    if (!target.unit)
+        return 0;
+    int64 const healed = FFXIV::Combat::DealFfxivScriptPotencyHeal(*player, *target.unit, spell, int32(potency));
+    return uint32(std::clamp<int64>(healed, 0, std::numeric_limits<uint32>::max()));
+}
+
+TSNumber<uint32> TSPlayer::GetFfxivPotencyHeal(TSUnit target, uint32 spell, uint32 potency)
+{
+    if (!target.unit)
+        return 0;
+    int64 const amount = FFXIV::Combat::ComputeFfxivScriptPotencyHeal(*player, *target.unit, spell, int32(potency));
+    return uint32(std::clamp<int64>(amount, 0, std::numeric_limits<uint32>::max()));
 }
 
 

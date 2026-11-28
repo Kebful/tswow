@@ -14,13 +14,13 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
+import { ClassMaskCell } from "../Class/ClassMaskCell";
 import { makeMaskCell32, MaskCell32 } from "../../../data/cell/cells/MaskCell";
 import { MultiRowSystem } from "../../../data/cell/systems/MultiRowSystem";
 import { finish } from "../../../data/index";
 import { BuildArgs } from "../../../data/Settings";
 import { TalentTabRow } from "../../dbc/TalentTab";
 import { DBC } from "../../DBCFiles";
-import { ClassMask } from "../Class/ClassRegistry";
 import { MainEntity } from "../Misc/Entity";
 import { Ids } from "../Misc/Ids";
 import { SpellIconCell } from "../Spell/SpellIcon";
@@ -108,7 +108,7 @@ export class TalentTree extends MainEntity<TalentTabRow> {
     get Talents() { return new TalentTreeTalents(this); }
     // racemasks don't seem to work clientside for now
     //get RaceMask() { return new RaceMask(this, this.row.RaceMask); }
-    get ClassMask() { return makeMaskCell32(ClassMask, this, this.row.ClassMask); }
+    get ClassMask() { return new ClassMaskCell(this, this.row.ClassMask); }
     get OrderIndex() { return this.wrap(this.row.OrderIndex); }
     get PetTalentMask() { return new MaskCell32(this, this.row.PetTalentMask)}
 
@@ -117,7 +117,7 @@ export class TalentTree extends MainEntity<TalentTabRow> {
 finish('verify-talent-trees',()=>{
     if(BuildArgs.READ_ONLY) return;
     TalentTreeRegistry.forEach(x=>{
-        if(x.ClassMask.get() === 0 && !x.PetTalentMask.get()) {
+        if(x.ClassMask.get() === BigInt(0) && !x.PetTalentMask.get()) {
             throw new Error(`Talent Tab ${x.ID} has no classmask set, it will bug out talents for all classes`)
         }
     })

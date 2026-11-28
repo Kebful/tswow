@@ -44,9 +44,16 @@ const defaultTsConfig = (addon: Addon) => ({
       ],
       "experimentalDecorators":true,
       "skipLibCheck": true,
-      "types": ["typescript-to-lua/language-extensions"],
+      "strict": true,
+      // Lua extensions (LuaTable, LuaMultiReturn, ...) are included by path instead of the
+      // "types" entry: a package subpath in "types" cannot be resolved by newer TypeScript
+      // versions (6+ removed that lookup), which made editors report "Cannot find name
+      // 'LuaTable'" for every addon file while the pinned tsc still built fine.
+      "types": [],
     },
-    "include":['./','../shared'],
+    "include":['./',
+        '../shared',
+        ipaths.node_modules.tstl_language_extensions.relativeTo(addon.path).get()],
     "exclude":['../scripts','../assets','../data'],
     "tstl": {
       "luaTarget": "5.1",
@@ -301,11 +308,20 @@ export class Addon {
             .filter(mod=>mod.addon.path.build.exists())
             .forEach(mod=>{
                 mod.addon.addFilelistToToc(tocfile);
-                mod.addon.path.build.copy(
-                    dataset.path.luaxml.Interface.FrameXML.TSAddons.mod
-                        .pick(mod.relativePath.get()
-                    )
-                )
+                // Mirror, do not merge: a plain copy leaves every file an older build wrote (stale
+                // entry files, moved folders) in the patch, and the client keeps loading them. That
+                // is how the shipped addon ran an old addon.lua that did not reference the combo UI
+                // while the build output did.
+                const addonDest = dataset.path.luaxml.Interface.FrameXML.TSAddons.mod
+                    .pick(mod.relativePath.get());
+                addonDest.remove();
+                mod.addon.path.build.copy(addonDest);
+                // The patch is written by merging the luaxml tree into it, so the module's previous
+                // files (an older addon.lua, folders a previous layout emitted) would survive there.
+                // Drop the module directory first: the patch then holds exactly the build's output,
+                // and addon.lua is never hand-touched.
+                wfs.remove(mpath(dataset.client.path.Data.devPatch,
+                    'Interface', 'FrameXML', 'TSAddons', mod.relativePath.get()));
             })
         wfs.writeLines(dataset.path.luaxml.Interface.FrameXML.framexml_toc, tocfile);
         dataset.path.luaxml.copy(dataset.client.path.Data.devPatch)

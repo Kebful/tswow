@@ -17,7 +17,7 @@
 import { int, loc_constructor } from '../../data/primitives'
 import { Relation } from '../../data/query/Relations'
 import { PrimaryKey } from '../../data/table/PrimaryKey'
-import { DBCIntCell, DBCKeyCell, DBCLocCell, DBCStringCell } from '../../data/dbc/DBCCell'
+import { DBCClassMaskCell, DBCIntCell, DBCKeyCell, DBCLocCell, DBCStringCell } from '../../data/dbc/DBCCell'
 import { DBCFile } from '../../data/dbc/DBCFile'
 import { DBCRow } from '../../data/dbc/DBCRow'
 
@@ -53,22 +53,22 @@ export class TalentTabRow extends DBCRow<TalentTabCreator,TalentTabQuery> {
     /**
      * No comment (yet!)
      */
-    get ClassMask() { return new DBCIntCell(this,this.buffer,this.offset+80)}
+    get ClassMask() { return new DBCClassMaskCell(this,this.buffer,this.offset+80)}
 
     /**
      * No comment (yet!)
      */
-    get PetTalentMask() { return new DBCIntCell(this,this.buffer,this.offset+84)}
+    get PetTalentMask() { return new DBCIntCell(this,this.buffer,this.offset+88)}
 
     /**
      * No comment (yet!)
      */
-    get OrderIndex() { return new DBCIntCell(this,this.buffer,this.offset+88)}
+    get OrderIndex() { return new DBCIntCell(this,this.buffer,this.offset+92)}
 
     /**
      * No comment (yet!)
      */
-    get BackgroundFile() { return new DBCStringCell(this,this.buffer,this.offset+92)}
+    get BackgroundFile() { return new DBCStringCell(this,this.buffer,this.offset+96)}
 
     /**
      * Creates a clone of this row with new primary keys.
@@ -87,7 +87,7 @@ export type TalentTabCreator = {
     Name?: loc_constructor
     SpellIconID?: int
     RaceMask?: int
-    ClassMask?: int
+    ClassMask?: bigint | number
     PetTalentMask?: int
     OrderIndex?: int
     BackgroundFile?: string
@@ -101,7 +101,7 @@ export type TalentTabQuery = {
     Name? : Relation<string>
     SpellIconID? : Relation<int>
     RaceMask? : Relation<int>
-    ClassMask? : Relation<int>
+    ClassMask? : Relation<bigint | number>
     PetTalentMask? : Relation<int>
     OrderIndex? : Relation<int>
     BackgroundFile? : Relation<string>
@@ -116,7 +116,7 @@ export class TalentTabDBCFile extends DBCFile<
     TalentTabQuery,
     TalentTabRow> {
     constructor() {
-        super('TalentTab',(t,b,o)=>new TalentTabRow(t,b,o))
+        super('TalentTab',(t,b,o)=>new TalentTabRow(t,b,o), { legacyFields: 24, fields: [20] })
     }
     /** Loads a new TalentTab.dbc from a file. */
     static read(path: string): TalentTabDBCFile {

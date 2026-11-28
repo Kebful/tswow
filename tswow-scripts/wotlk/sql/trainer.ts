@@ -17,7 +17,7 @@
 import { int, mediumint, smallint, text, tinyint } from '../../data/primitives'
 import { Relation } from '../../data/query/Relations'
 import { PrimaryKey } from '../../data/table/PrimaryKey'
-import { SQLCell, SQLCellReadOnly } from '../../data/sql/SQLCell'
+import { SQLBigIntCell, SQLCell, SQLCellReadOnly } from '../../data/sql/SQLCell'
 import { SqlRow } from '../../data/sql/SQLRow'
 import { SqlTable } from '../../data/sql/SQLTable'
 
@@ -63,7 +63,7 @@ export class trainerRow extends SqlRow<trainerCreator,trainerQuery> {
     /**
      * Custom tswow field
      */
-    get classMask() { return new SQLCell<int,this>(this, 'classMask')}
+    get classMask() { return new SQLBigIntCell<this>(this, 'classMask')}
 
     /**
      * Creates a clone of this row with new primary keys.

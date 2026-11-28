@@ -17,7 +17,7 @@
 import { float, int, mediumint, smallint, tinyint, varchar } from '../../data/primitives'
 import { Relation } from '../../data/query/Relations'
 import { PrimaryKey } from '../../data/table/PrimaryKey'
-import { SQLCell, SQLCellReadOnly } from '../../data/sql/SQLCell'
+import { SQLBigIntCell, SQLCell, SQLCellReadOnly } from '../../data/sql/SQLCell'
 import { SqlRow } from '../../data/sql/SQLRow'
 import { SqlTable } from '../../data/sql/SQLTable'
 
@@ -83,7 +83,7 @@ export class item_templateRow extends SqlRow<item_templateCreator,item_templateQ
     /**
      * No comment (yet!)
      */
-    get BuyPrice() {return new SQLCell<bigint, this>(this, 'BuyPrice')}
+    get BuyPrice() {return new SQLBigIntCell<this>(this, 'BuyPrice')}
 
     /**
      * No comment (yet!)
@@ -98,7 +98,7 @@ export class item_templateRow extends SqlRow<item_templateCreator,item_templateQ
     /**
      * No comment (yet!)
      */
-    get AllowableClass() {return new SQLCell<int, this>(this, 'AllowableClass')}
+    get AllowableClass() {return new SQLBigIntCell<this>(this, 'AllowableClass')}
 
     /**
      * No comment (yet!)
@@ -752,7 +752,7 @@ export type item_templateCreator = {
     BuyPrice? : bigint,
     SellPrice? : int,
     InventoryType? : tinyint,
-    AllowableClass? : int,
+    AllowableClass? : bigint | number,
     AllowableRace? : int,
     ItemLevel? : smallint,
     RequiredLevel? : tinyint,
@@ -896,7 +896,7 @@ export type item_templateQuery = {
     BuyCount? : Relation<tinyint>,
     SellPrice? : Relation<int>,
     InventoryType? : Relation<tinyint>,
-    AllowableClass? : Relation<int>,
+    AllowableClass? : Relation<bigint | number>,
     AllowableRace? : Relation<int>,
     ItemLevel? : Relation<smallint>,
     RequiredLevel? : Relation<tinyint>,

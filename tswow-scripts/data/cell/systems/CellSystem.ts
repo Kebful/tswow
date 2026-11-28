@@ -128,7 +128,7 @@ export class CellSystem<T> {
         return this.wrapLoc(new MulticastLocCell(this, cells))
     }
 
-    protected wrapUnlock(cell: CellReadOnly<number,any>) {
+    protected wrapUnlock<D extends number | bigint>(cell: CellReadOnly<D,any>) {
         return new CellUnlocker(this, cell);
     }
 

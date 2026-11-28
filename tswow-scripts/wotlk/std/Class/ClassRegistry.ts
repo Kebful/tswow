@@ -18,6 +18,7 @@ import { RegistryRowBase } from "../Refs/Registry";
 import { CharacterCreationUI } from "../UI/CharacterCreation";
 import { BaseClassData } from "./BaseClassData";
 import { Class } from "./Class";
+import { classBit } from "./ClassMaskCell";
 import { ClassIDs } from "./ClassIDs";
 
 // it's too complicated to find all the lua/xml rows again
@@ -114,7 +115,7 @@ export class ClassRegistryClass
         return super.load(makeEnum(ClassIDs,cls));
     }
 
-    create(mod: string, clsId: string, parentClass: EnumCon<keyof typeof ClassIDs>) {
+    create(mod: string, clsId: string, parentClass: EnumCon<keyof typeof ClassIDs>, expectedId?: number) {
         if (clsId.length == 0)
         {
             throw new Error(`Empty class id`)
@@ -150,23 +151,27 @@ export class ClassRegistryClass
 
         // Create class object
         const rParent = DBC.ChrClasses.findById(parent);
-        const id = Ids.Class.id(mod,clsId);
+        const id = Ids.Class.id(mod, clsId, expectedId);
+        if (expectedId !== undefined && id !== expectedId) {
+            throw new Error(`Class ${mod}:${clsId} allocated ${id}, expected ${expectedId}`);
+        }
+        classBit(id);
         const classIndex = DBC.ChrClasses.rowCount;
 
         // Copy all languages
         if(languages.length == 0) {
             languages = SQL.playercreateinfo_skills.queryAll({comment:includes("Language")})
         }
-        languages.forEach(x=>x.clone(x.raceMask.get(),(x.classMask.get()|1<<(id-1)>>>0),x.skill.get()));
+        languages.forEach(x=>x.clone(x.raceMask.get(),(x.classMask.get() | classBit(id)),x.skill.get()));
 
         // Setup RaceClassInfos
         DBC.SkillRaceClassInfo.query({});
         const parentRCI = DBC.SkillRaceClassInfo.queryAll({})
-            .filter(x=>x.RaceMask.get() !== 4294967295 && x.ClassMask.get()&((1<<(parent-1))>>>0));
+            .filter(x=>x.RaceMask.get() !== 4294967295 && (x.ClassMask.get() & classBit(parent)));
         parentRCI.forEach(x=>{
             let mask = x.ClassMask.get();
-            if(mask!==0xffffffff) {
-                mask = (mask | (1<<(id-1)))>>>0;
+            if(mask !== BigInt(0xffffffff)) {
+                mask = mask | classBit(id);
             }
             x.ClassMask.set(mask);
         });

@@ -3,12 +3,13 @@ import { MultiRowSystem } from "../../../data/cell/systems/MultiRowSystem";
 import { RaceMask } from "../Race/RaceType";
 import { TalentTreeRegistry } from "../Talents/Talents";
 import { TalentTree } from "../Talents/TalentTree";
+import { classBit } from "./ClassMaskCell";
 import { Class } from "./Class";
 
 export class ClassTalents extends MultiRowSystem<TalentTree,Class> {
     protected getAllRows(): TalentTree[] {
         return TalentTreeRegistry
-            .filter(x=>x.row.ClassMask.get()&(1<<(this.owner.ID-1)))
+            .filter(x=>x.row.ClassMask.get()&(classBit(this.owner.ID)))
     }
     protected isDeleted(value: TalentTree): boolean {
         return value.row.isDeleted();
@@ -18,7 +19,7 @@ export class ClassTalents extends MultiRowSystem<TalentTree,Class> {
         let tree = TalentTreeRegistry.create(mod,id)
         tree.row.OrderIndex.set(tabIndex)
                 .RaceMask.set(makeMask(RaceMask,races))
-                .ClassMask.set(1<<(this.owner.ID-1))
+                .ClassMask.set(classBit(this.owner.ID))
         return tree;
     }
 

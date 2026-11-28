@@ -18,7 +18,8 @@ import * as fs from 'fs';
 import path from 'path';
 import { WDirectory } from '../util/FileTree';
 import { GetId as _GetId, GetIdRange as _GetIdRange, IdPrivate } from '../util/ids/Ids';
-import { ipaths } from '../util/Paths';
+import { ipaths, moduleNameToPath } from '../util/Paths';
+import { mpath, wfs } from '../util/FileSystem';
 import { __internal_wotlk_applyDeletes, __internal_wotlk_save } from '../wotlk/internal/__wotlkEvents';
 import { Objects as _Objects } from './cell/serialization/ObjectIteration';
 import { _writeLUAXML } from './luaxml/LUAXML';
@@ -160,6 +161,21 @@ async function main() {
     }
     cur_stage = 'LUAXML'
     deasync((callback)=>applyStage(luaxmls).then(callback))();
+    // Publish the current addon builds, not whatever the luaxml staging tree still holds. The tree is
+    // only seeded once (setupClientData copyOnNoTarget), so a data build used to copy a stale
+    // TSAddons/<module> (old addon.lua, moved folders) over the freshly built addon, and the client
+    // ran the old addon until the next `build addon` + /reload; a restart brought it back.
+    // (this process only has the dataset's paths, so the module list comes from modules.txt)
+    if(dataset.modules_txt.exists()) {
+        for(const moduleName of wfs.readLines(dataset.modules_txt)) {
+            if(!moduleName) continue;
+            const build = mpath(moduleNameToPath(moduleName).get(), 'addon', 'build');
+            if(!wfs.exists(build)) continue;
+            const dest = mpath(dataset.luaxml.get(), 'Interface', 'FrameXML',
+                'TSAddons', moduleName.split('.').join('/'));
+            wfs.copy(build, dest, true);
+        }
+    }
     dataset.luaxml.copy(BuildArgs.CLIENT_PATCH_DIR,false);
 
     __internal_wotlk_applyDeletes();
@@ -172,7 +188,7 @@ async function main() {
 
     deasync((callback)=>
     {
-        __internal_wotlk_save().then(callback);
+        __internal_wotlk_save().then(() => callback(), callback);
     })()
     SqlConnection.allDbs().filter(x=>x!==undefined).map(x=>Connection.end(x));
 

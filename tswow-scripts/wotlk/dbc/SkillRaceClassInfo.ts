@@ -17,7 +17,7 @@
 import { int } from '../../data/primitives'
 import { Relation } from '../../data/query/Relations'
 import { PrimaryKey } from '../../data/table/PrimaryKey'
-import { DBCIntCell, DBCKeyCell, DBCMaskCell } from '../../data/dbc/DBCCell'
+import { DBCClassMaskCell, DBCIntCell, DBCKeyCell, DBCMaskCell } from '../../data/dbc/DBCCell'
 import { DBCFile } from '../../data/dbc/DBCFile'
 import { DBCRow } from '../../data/dbc/DBCRow'
 
@@ -48,27 +48,27 @@ export class SkillRaceClassInfoRow extends DBCRow<SkillRaceClassInfoCreator,Skil
     /**
      * No comment (yet!)
      */
-    get ClassMask() { return new DBCMaskCell(this,this.buffer,this.offset+12)}
+    get ClassMask() { return new DBCClassMaskCell(this,this.buffer,this.offset+12)}
 
     /**
      * No comment (yet!)
      */
-    get Flags() { return new DBCMaskCell(this,this.buffer,this.offset+16)}
+    get Flags() { return new DBCMaskCell(this,this.buffer,this.offset+20)}
 
     /**
      * No comment (yet!)
      */
-    get MinLevel() { return new DBCIntCell(this,this.buffer,this.offset+20)}
+    get MinLevel() { return new DBCIntCell(this,this.buffer,this.offset+24)}
 
     /**
      * No comment (yet!)
      */
-    get SkillTierID() { return new DBCIntCell(this,this.buffer,this.offset+24)}
+    get SkillTierID() { return new DBCIntCell(this,this.buffer,this.offset+28)}
 
     /**
      * No comment (yet!)
      */
-    get SkillCostIndex() { return new DBCIntCell(this,this.buffer,this.offset+28)}
+    get SkillCostIndex() { return new DBCIntCell(this,this.buffer,this.offset+32)}
 
     /**
      * Creates a clone of this row with new primary keys.
@@ -86,7 +86,7 @@ export class SkillRaceClassInfoRow extends DBCRow<SkillRaceClassInfoCreator,Skil
 export type SkillRaceClassInfoCreator = {
     SkillID?: int
     RaceMask?: int
-    ClassMask?: int
+    ClassMask?: bigint | number
     Flags?: int
     MinLevel?: int
     SkillTierID?: int
@@ -100,7 +100,7 @@ export type SkillRaceClassInfoQuery = {
     ID? : Relation<int>
     SkillID? : Relation<int>
     RaceMask? : Relation<int>
-    ClassMask? : Relation<int>
+    ClassMask? : Relation<bigint | number>
     Flags? : Relation<int>
     MinLevel? : Relation<int>
     SkillTierID? : Relation<int>
@@ -116,7 +116,7 @@ export class SkillRaceClassInfoDBCFile extends DBCFile<
     SkillRaceClassInfoQuery,
     SkillRaceClassInfoRow> {
     constructor() {
-        super('SkillRaceClassInfo',(t,b,o)=>new SkillRaceClassInfoRow(t,b,o))
+        super('SkillRaceClassInfo',(t,b,o)=>new SkillRaceClassInfoRow(t,b,o), { legacyFields: 8, fields: [3] })
     }
     /** Loads a new SkillRaceClassInfo.dbc from a file. */
     static read(path: string): SkillRaceClassInfoDBCFile {
